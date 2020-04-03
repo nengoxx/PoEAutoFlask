@@ -30,13 +30,14 @@ FlaskDurationInit := []
 ;
 ; Note: Delete the last line (["e"]), or set value to 0, if you don't use a buff skill
 ;----------------------------------------------------------------------
-FlaskDurationInit[1] := 0
-FlaskDurationInit[2] := 0
-FlaskDurationInit[3] := 0
-FlaskDurationInit[4] := 0
-FlaskDurationInit[5] := 0
-FlaskDurationInit["e"] := 4500	; I use Steelskin here
-FlaskDurationInit["r"] := 0	; I use Molten Shell here
+FlaskDurationInit[1] := 2700	; karui life
+FlaskDurationInit[2] := 4000	; life
+FlaskDurationInit[3] := 4800	; armor
+FlaskDurationInit[4] := 8000	; armor(x2 so they dont stack after 1st time)
+FlaskDurationInit[5] := 4800	; qs
+FlaskDurationInit["e"] := 0	; Steelskin
+FlaskDurationInit["r"] := 0	; Molten Shell
+attacktimeout:= 2000		; (default=500)time between attacks to consider
 
 FlaskDuration := []
 FlaskLastUsed := []
@@ -99,7 +100,7 @@ WeaponSwap := False
 Loop {
 	if (UseFlasks) {
 		; have we attacked in the last 0.5 seconds?
-		if ((A_TickCount - LastRightClick) < 500) {
+		if ((A_TickCount - LastRightClick) < attacktimeout) {
 			Gosub, CycleAllFlasksWhenReady
 		} else {
 			; We haven't attacked recently, but are we channeling/continuous?
@@ -114,7 +115,8 @@ Loop {
 	UseFlasks := not UseFlasks
 	if UseFlasks {
 		; initialize start of auto-flask use
-		ToolTip, UseFlasks On
+		ToolTip, UseFlasks On, 0, 0
+		SetTimer, RemoveToolTip, Off
 		
 		; reset usage timers for all flasks
 		for i in FlaskDurationInit {
@@ -122,9 +124,15 @@ Loop {
 			FlaskDuration[i] := FlaskDurationInit[i]
 		}
 	} else {
-		ToolTip, UseFlasks Off
+		ToolTip, UseFlasks Off, 0, 0
+		SetTimer, RemoveToolTip, -5000
 	}
 	return
+
+; A little tweak for my preference
+RemoveToolTip:
+ToolTip
+return
 
 ;----------------------------------------------------------------------
 ; To use a different moust button (default is right click), change the
