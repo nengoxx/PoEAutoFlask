@@ -1,5 +1,18 @@
 # PoEAutoFlask  
-Automates the use of buff style flasks for Path of Exile using an AutoHotKey script.  
+Automates the use of flasks for Path of Exile using an AutoHotKey script.
+
+Credit to the author of the source script: https://github.com/JoelStanford/PoEAutoFlask
+
+I tried some more complex scripts but I liked the simplicity on this one and my main idea is to keep it simple while 
+adding more usability for life or utility flasks(quicksilver, armor, mana, etc).
+Nothing about image recognition or other more complex methods, rather I'm planning on adding simple queueing or more
+hotkeys to trigger the flasks, like Quicksilver on left click, pop armor/defensive flasks on attack, and queueing 
+life flasks one after another instead of popping them all at once.
+
+Any ideas are welcome!
+
+
+Original readme:
   
 NOTE: you MUST install AutoHotKey for this script to function!  
 NOTE: this will not work properly for Life, Mana or Hybrid style flasks!  
