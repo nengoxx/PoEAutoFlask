@@ -143,13 +143,18 @@ Loop {
 			}
 			Gosub, CycleAllSpellsWhenReady
 			Gosub, CycleBuffFlasksWhenReady
-			Gosub, CycleQSFlasksWhenReady
 		} else {
 			; We haven't attacked recently, but are we channeling/continuous?
 			if (HoldRightClick) {
 				Gosub, CycleAllFlasksWhenReady
 				Gosub, CycleAllSpellsWhenReady
 				Gosub, CycleBuffFlasksWhenReady
+			}
+		}
+		if ((A_TickCount - LastLeftClick) < qstimeout) {
+			Gosub, CycleQSFlasksWhenReady
+		} else {
+			if (HoldLeftClick) {
 				Gosub, CycleQSFlasksWhenReady
 			}
 		}
