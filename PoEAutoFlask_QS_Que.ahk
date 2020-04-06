@@ -6,7 +6,7 @@
 ; right mouse button - primary attack skills
 ; 1-5 - number keys to manually use a specific flask
 ; ` (backtick) - use all flasks, now
-; "e" and "r" for casting buffs
+; "e" and "q" for casting buffs
 ; Note - the inventory buttons assume a starting location based on screen
 ; resolution - you'll need to update some locations, see below.
 ; Alt+c to Ctrl-Click every location in the (I)nventory screen.
@@ -20,6 +20,7 @@
 #Warn
 #Persistent
 
+SpellDurationInit := []
 FlaskDurationInit := []
 FlaskDurationBuffInit := []
 FlaskDurationQSInit := []
@@ -40,8 +41,10 @@ FlaskDurationInit[1] := 3000	; karui life(2700)
 ;FlaskDurationInit[3] := 4800	; Rumi's armor(4800)
 ;FlaskDurationInit[4] := 8000	; divination(5000)/armor(4000x2 so they dont stack after 1st time)
 ;FlaskDurationInit[5] := 4900	; QS(4800)
-FlaskDurationInit["q"] := 9000	; Molten Shell(~8600)
-FlaskDurationInit["e"] := 3200	; Convocation(3000/3100)
+
+;--Spell list
+SpellDurationInit["q"] := 9000	; Molten Shell(~8600)
+SpellDurationInit["e"] := 3200	; Convocation(3000/3100)
 
 ;--Buff flask list(queued one after another)
 FlaskDurationBuffInit[3] := 4800	; Rumi's armor(4800)
@@ -51,19 +54,26 @@ FlaskDurationBuffInit[4] := 4000	; divination(5000)/armor(4000)
 FlaskDurationQSInit[5] := 4900	; QS1(4800)
 FlaskDurationQSInit[2] := 6100	; Rotgut(6000)
 
+timeBeforeHeal := 2000		; time before using a life flask when pressing the attack button, set unless you got 0 ES(default=0)
 attacktimeout := 2000		; time between attacks(default=500)
 qstimeout := 200			; time to keep using qs after clicking(default=200)
 
 FlaskDuration := []
-lastBuffFlaskDuration := 0
-lastQSFlaskDuration := 0
+SpellDuration := []
 FlaskDurationBuff := []
 FlaskDurationQS := []
+
+lastBuffFlaskDuration := 0
+lastQSFlaskDuration := 0
+
 FlaskLastUsed := []
-lastBuffFlaskUsed := 0
-lastQSFlaskUsed := 0
+SpellLastUsed := []
 FlaskLastUsedBuff := []
 FlaskLastUsedQS := []
+
+lastBuffFlaskUsed := 0
+lastQSFlaskUsed := 0
+
 UseFlasks := false
 HoldRightClick := false
 HoldLeftClick := false
@@ -126,26 +136,20 @@ Loop {
 	if (UseFlasks) {
 		; have we attacked in the last 0.5 seconds?
 		if ((A_TickCount - LastRightClick) < attacktimeout) {
-			Gosub, CycleAllFlasksWhenReady
+			if (timeBeforeHeal <> 0) {
+				SetTimer, CycleAllFlasksWhenReady, -%timeBeforeHeal%
+			} else {
+				Gosub, CycleAllFlasksWhenReady
+			}
+			Gosub, CycleAllSpellsWhenReady
+			Gosub, CycleBuffFlasksWhenReady
+			Gosub, CycleQSFlasksWhenReady
 		} else {
 			; We haven't attacked recently, but are we channeling/continuous?
 			if (HoldRightClick) {
 				Gosub, CycleAllFlasksWhenReady
-			}
-		}
-		if ((A_TickCount - LastRightClick) < attacktimeout) {
-			Gosub, CycleBuffFlasksWhenReady
-		} else {
-			; We haven't moved recently, but are we channeling/continuous?
-			if (HoldRightClick) {
+				Gosub, CycleAllSpellsWhenReady
 				Gosub, CycleBuffFlasksWhenReady
-			}
-		}
-		if ((A_TickCount - LastLeftClick) < qstimeout) {
-			Gosub, CycleQSFlasksWhenReady
-		} else {
-			; We haven't moved recently, but are we channeling/continuous?
-			if (HoldLeftClick) {
 				Gosub, CycleQSFlasksWhenReady
 			}
 		}
@@ -165,6 +169,10 @@ Loop {
 		for i in FlaskDurationInit {
 			FlaskLastUsed[i] := 0
 			FlaskDuration[i] := FlaskDurationInit[i]
+		}
+		for i in SpellDurationInit {
+			SpellLastUsed[i] := 0
+			SpellDuration[i] := SpellDurationInit[i]
 		}
 		for i in FlaskDurationBuffInit {
 			FlaskLastUsedBuff[i] := 0
@@ -260,18 +268,18 @@ return
 	FlaskDuration[5] := FlaskDurationInit[5] + VariableDelay ; randomize duration to simulate human
 	return
 
-~r::
+~q::
 	; pass-thru and start timer for flask 5
-	FlaskLastUsed["r"] := A_TickCount
+	SpellLastUsed["q"] := A_TickCount
 	Random, VariableDelay, -99, 99
-	FlaskDuration[5] := FlaskDurationInit[5] + VariableDelay ; randomize duration to simulate human
+	SpellDuration[5] := SpellDurationInit[5] + VariableDelay ; randomize duration to simulate human
 	return
 
 ~e::
 	; pass-thru and start timer for flask 5
-	FlaskLastUsed["e"] := A_TickCount
+	SpellLastUsed["e"] := A_TickCount
 	Random, VariableDelay, -99, 99
-	FlaskDuration[5] := FlaskDurationInit[5] + VariableDelay ; randomize duration to simulate human
+	SpellDuration[5] := SpellDurationInit[5] + VariableDelay ; randomize duration to simulate human
 	return
 
 ;----------------------------------------------------------------------
@@ -310,6 +318,19 @@ CycleAllFlasksWhenReady:
 			FlaskLastUsed[flask] := A_TickCount
 			Random, VariableDelay, -99, 99
 			FlaskDuration[flask] := FlaskDurationInit[flask] + VariableDelay ; randomize duration to simulate human
+			sleep, %VariableDelay%
+		}
+	}
+	return
+	
+CycleAllSpellsWhenReady:
+	for spell, duration in SpellDuration {
+		; skip flasks with 0 duration and skip flasks that are still active
+		if ((duration > 0) & (duration < A_TickCount - SpellLastUsed[spell])) {
+			Send %spell%
+			SpellLastUsed[spell] := A_TickCount
+			Random, VariableDelay, -99, 99
+			SpellDuration[spell] := SpellDurationInit[spell] + VariableDelay ; randomize duration to simulate human
 			sleep, %VariableDelay%
 		}
 	}
