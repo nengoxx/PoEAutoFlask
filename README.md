@@ -11,9 +11,9 @@ life flasks one after another instead of popping them all at once.
 
 Any ideas are welcome!
 
-PoEAutoFlask        - original script
-PoEAutoFlask_QS     - separate Quicksilver on left click
-PoEAutoFlask_QS_Que - added queues for flasks 1>2 & 3>4(my setup)
+PoEAutoFlask        - original script  
+PoEAutoFlask_QS     - separate Quicksilver on left click  
+PoEAutoFlask_QS_Que - added queues for flasks 1>2 & 3>4(my setup)  
 
 
 Original readme:
