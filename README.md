@@ -13,7 +13,7 @@ Any ideas are welcome!
 
 PoEAutoFlask        - original script  
 PoEAutoFlask_QS     - separate Quicksilver on left click  
-PoEAutoFlask_QS_Que - added queues for flasks 1>2 & 3>4(my setup)  
+PoEAutoFlask_QS_Que - added 2 queues for flasks (3>4 & 2>5, my setup for 1life/2buff/2qs flasks)  
 
 
 Original readme:

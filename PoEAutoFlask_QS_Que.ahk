@@ -23,6 +23,8 @@
 FlaskDurationInit := []
 FlaskDurationBuffInit := []
 FlaskDurationQSInit := []
+BuffFlasks := 0
+QSFlasks := 0
 ;----------------------------------------------------------------------
 ; Set the duration of each flask, in ms, below.  For example, if the
 ; flask in slot 3 has a duration of "Lasts 4.80 Seconds", then use:
@@ -32,29 +34,34 @@ FlaskDurationQSInit := []
 ;
 ; Note: Delete the last line (["e"]), or set value to 0, if you don't use a buff skill
 ;----------------------------------------------------------------------
-;--Life Flask list
-FlaskDurationInit[1] := 2700	; karui life(2700)
-FlaskDurationInit[2] := 4000	; life(4000)
-;FlaskDurationInit[3] := 4800	; Rumi's armor
+;--Life Flask list (currently spammable flasks and spells on cd)
+FlaskDurationInit[1] := 3000	; karui life(2700)
+;FlaskDurationInit[2] := 5000	; life(4000)
+;FlaskDurationInit[3] := 4800	; Rumi's armor(4800)
 ;FlaskDurationInit[4] := 8000	; divination(5000)/armor(4000x2 so they dont stack after 1st time)
 ;FlaskDurationInit[5] := 4900	; QS(4800)
-FlaskDurationInit["q"] := 9000	; Molten Shell
-FlaskDurationInit["e"] := 3200	; Convocation
-;--Buff flask list
-FlaskDurationBuffInit[3] := 4800	; Rumi's armor
-FlaskDurationBuffInit[4] := 4000	; divination(5000)/armor(4000x2 so they dont stack after 1st time)
-;--QuickSilver flask list
-FlaskDurationQSInit[5] := 4800	; QS1
+FlaskDurationInit["q"] := 9000	; Molten Shell(~8600)
+FlaskDurationInit["e"] := 3200	; Convocation(3000/3100)
 
-attacktimeout := 2000		; (default=500)time between attacks to consider
-qstimeout := 200			; time to keep using qs after clicking
+;--Buff flask list(queued one after another)
+FlaskDurationBuffInit[3] := 4800	; Rumi's armor(4800)
+FlaskDurationBuffInit[4] := 4000	; divination(5000)/armor(4000)
+
+;--QuickSilver flask list
+FlaskDurationQSInit[5] := 4900	; QS1(4800)
+FlaskDurationQSInit[2] := 6100	; Rotgut(6000)
+
+attacktimeout := 2000		; time between attacks(default=500)
+qstimeout := 200			; time to keep using qs after clicking(default=200)
 
 FlaskDuration := []
 lastBuffFlaskDuration := 0
+lastQSFlaskDuration := 0
 FlaskDurationBuff := []
 FlaskDurationQS := []
 FlaskLastUsed := []
 lastBuffFlaskUsed := 0
+lastQSFlaskUsed := 0
 FlaskLastUsedBuff := []
 FlaskLastUsedQS := []
 UseFlasks := false
@@ -153,6 +160,8 @@ Loop {
 		SetTimer, RemoveToolTip, Off
 
 		; reset usage timers for all flasks
+		BuffFlasks := 0
+		QSFlasks := 0
 		for i in FlaskDurationInit {
 			FlaskLastUsed[i] := 0
 			FlaskDuration[i] := FlaskDurationInit[i]
@@ -160,10 +169,12 @@ Loop {
 		for i in FlaskDurationBuffInit {
 			FlaskLastUsedBuff[i] := 0
 			FlaskDurationBuff[i] := FlaskDurationBuffInit[i]
+			BuffFlasks += 1
 		}
 		for i in FlaskDurationQSInit {
 			FlaskLastUsedQS[i] := 0
 			FlaskDurationQS[i] := FlaskDurationQSInit[i]
+			QSFlasks += 1
 		}
 	} else {
 		ToolTip, UseFlasks Off, 0, 0
@@ -308,11 +319,16 @@ CycleQSFlasksWhenReady:
 	for flask, duration in FlaskDurationQS {
 		; skip flasks with 0 duration and skip flasks that are still active
 		if ((duration > 0) & (duration < A_TickCount - FlaskLastUsedQS[flask])) {
-			Send %flask%
-			FlaskLastUsedQS[flask] := A_TickCount
-			Random, VariableDelay, -99, 99
-			FlaskDurationQS[flask] := FlaskDurationQSInit[flask] + VariableDelay ; randomize duration to simulate human
-			sleep, %VariableDelay%
+			;check if we have more than 2 flasks or if the last flask used its not the same and has finished already
+			if ((QSFlasks < 2 || flask != lastQSFlaskUsed) && (A_TickCount - lastQSFlaskDuration > FlaskLastUsedQS[lastQSFlaskUsed])) {
+				Send %flask%
+				FlaskLastUsedQS[flask] := A_TickCount
+				lastQSFlaskUsed := flask
+				Random, VariableDelay, -99, 99
+				FlaskDurationQS[flask] := FlaskDurationQSInit[flask] + VariableDelay ; randomize duration to simulate human
+				lastQSFlaskDuration := FlaskDurationQS[flask]
+				sleep, %VariableDelay%
+			}
 		}
 	}
 	return
@@ -321,8 +337,8 @@ CycleBuffFlasksWhenReady:
 	for flask, duration in FlaskDurationBuff {
 		; skip flasks with 0 duration and skip flasks that are still active
 		if ((duration > 0) & (duration < A_TickCount - FlaskLastUsedBuff[flask])) {
-			;check if the last flask used has finished already
-			if ((flask != lastBuffFlaskUsed) && (A_TickCount - lastBuffFlaskDuration > FlaskLastUsedBuff[lastBuffFlaskUsed])) {
+			;check if we have more than 2 flasks or if the last flask used its not the same and has finished already
+			if ((BuffFlasks < 2 || flask != lastBuffFlaskUsed) && (A_TickCount - lastBuffFlaskDuration > FlaskLastUsedBuff[lastBuffFlaskUsed])) {
 				Send %flask%
 				FlaskLastUsedBuff[flask] := A_TickCount
 				lastBuffFlaskUsed := flask
