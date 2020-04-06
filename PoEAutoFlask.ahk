@@ -35,9 +35,9 @@ FlaskDurationInit[2] := 4000	; life
 FlaskDurationInit[3] := 4800	; armor
 FlaskDurationInit[4] := 8000	; armor(x2 so they dont stack after 1st time)
 FlaskDurationInit[5] := 4800	; qs
-FlaskDurationInit["e"] := 0	; Steelskin
-FlaskDurationInit["r"] := 0	; Molten Shell
-attacktimeout:= 2000		; (default=500)time between attacks to consider
+FlaskDurationInit["q"] := 0		; Molten Shell
+FlaskDurationInit["e"] := 0		; Convocation
+attacktimeout:= 2000			; (default=500)time between attacks to consider
 
 FlaskDuration := []
 FlaskLastUsed := []
