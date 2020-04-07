@@ -47,17 +47,20 @@ SpellDurationInit["q"] := 9000	; Molten Shell(~8600)
 SpellDurationInit["e"] := 3200	; Convocation(3000/3100)
 
 ;--Buff flask list(queued one after another)
+FlaskDurationBuffInit[2] := 4000	; divination(5000)/armor(4000)
 FlaskDurationBuffInit[3] := 4800	; Rumi's armor(4800)
-FlaskDurationBuffInit[4] := 4000	; divination(5000)/armor(4000)
 
 ;--QuickSilver flask list
-FlaskDurationQSInit[5] := 4900	; QS1(4800)
-FlaskDurationQSInit[2] := 6100	; Rotgut(6000)
+FlaskDurationQSInit[4] := 4900	; QS1(4800)
+FlaskDurationQSInit[5] := 6200	; QS2(6100)/Rotgut(6000)
 
-timeBeforeHeal := 2000		; time before using a life flask when pressing the attack button, set unless you got 0 ES(default=0)
+timeBeforeHeal := 0			; time before using a life flask when pressing the attack button, set unless you got 0 ES(default=0)
 attacktimeout := 2000		; time between attacks(default=500)
 qstimeout := 200			; time to keep using qs after clicking(default=200)
+osb := "r"					; oh Shit button to spam 2 defensive skill at once when pressing "w", set to 0 if not used(default="r")
+							; I used this for vaal skills, to change the default("w") hotkey go down to the button section.
 
+; variables to inittialize
 FlaskDuration := []
 SpellDuration := []
 FlaskDurationBuff := []
@@ -161,7 +164,7 @@ Loop {
 	}
 }
 
-!F12::
+F6::
 	UseFlasks := not UseFlasks
 	if UseFlasks {
 		; initialize start of auto-flask use
@@ -232,6 +235,12 @@ return
 ~LButton up::
 	; pass-thru and release the right mouse button
 	HoldLeftClick := false
+	return
+	
+~W::
+	if(osb <> 0) {
+		send %osb%
+	}
 	return
 
 ;----------------------------------------------------------------------
