@@ -15,6 +15,35 @@ PoEAutoFlask        - original script
 PoEAutoFlask_QS     - separate Quicksilver on left click  
 PoEAutoFlask_QS_Que - added 2 queues for flasks (3>4 & 2>5, my setup for 1life/2buff/2qs flasks)  
 
+Added Features:
+
+-3 different queues for the flasks:  
+	- Quicksilver flasks(triggered in order)
+	-Health flasks(option to queue/spam the flasks)
+	-Spells(spammed)
+	-Buff flasks(option to queue/spam the flasks)
+	
+- You can set the time before using healing flask after clicking the attack button(timeBeforeHeal)
+- You can toggle the time between attacks ingame for builds that don't spam attacks(I commented it tho)
+- Added another variable for the time between attacks in case of the life flask queue to replace the above toggle
+- Added a global defensive button to use up to 2 additional spells, like instant heal potion + some vaal
+	(I set it to W by default you must change the hotkey itself by yourself)
+- Added some simple pause when pressing the enter key when you wanna use the chat, it just works with the enter key so be careful still
+- Added some randomness in the gem swapping, didn't check the 'ctrl+click all the inventory' thing since I dont use it but I don't recomment using it without any randomness
+- Changed the bot toggle to "Z"/"F6"
+- Added auto DC on shift+f (you need to place cports.exe in the same folder and it has to be the same version as the game x86/x64)
+
+
+
+
+
+
+
+
+
+
+
+
 
 Original readme:
 

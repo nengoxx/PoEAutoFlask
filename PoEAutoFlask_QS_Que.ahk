@@ -63,8 +63,7 @@ attacktimeout_long := 10000	; ingame toggle for the attack timeout
 attacktimeout_life := 10000	; time to keep using life flasks after attacking
 qstimeout := 200			; time to keep using qs after clicking(default=200)
 osb := "t"					; oh-Shit buttons to spam 2 defensive skill at once when pressing "w", set to 0 if not used(default="r")
-osb2 := "2"					; I used this for vaal skills, to change the default("w") hotkey go down to the button section.
-							; Also the key will be assigned as the short/long attack timeout toggle and will not work
+osb2 := "2"					; I used this for vaal skills, to change the default("w") hotkey go down to the hotkey section.
 
 ; variables to inittialize
 FlaskDuration := []
