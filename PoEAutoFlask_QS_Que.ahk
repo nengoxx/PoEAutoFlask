@@ -38,30 +38,33 @@ QSFlasks := 0
 ;----------------------------------------------------------------------
 ;--Life Flask list (currently spammable flasks and spells on cd)
 FlaskDurationInit[1] := 2600	; karui life(2500)
-FlaskDurationInit[2] := 2800	; 2ndkarui(2700)/life(4000)/basalt(4500)
+FlaskDurationInit[2] := 1000	; 2ndkarui(2700)/life(4000)/basalt(4500)
 ;FlaskDurationInit[3] := 4800	; Rumi's armor(4800)
 ;FlaskDurationInit[4] := 8000	; divination(5000)/armor(4000x2 so they dont stack after 1st time)
 ;FlaskDurationInit[5] := 4900	; QS(4800)
 
 ;--Spell list
-SpellDurationInit["q"] := 9000	; Molten Shell(~8600)
-;SpellDurationInit["e"] := 3200	; Convocation(3000/3100)
+SpellDurationInit["q"] := 9700	; Molten Shell(~8700)/MS+19%(~9500)
+SpellDurationInit["e"] := 3200	; Convocation(3000/3100)
 
 ;--Buff flask list(queued one after another)
-FlaskDurationBuffInit[3] := 5500	; divination(5000)/armor(4000)/basalt(5400)
-FlaskDurationBuffInit[4] := 4900	; Rumi's armor(4800)
+FlaskDurationBuffInit[3] := 4900	; divination(5000)/armor(4000)/basalt(5400)
+FlaskDurationBuffInit[4] := 5500	; Rumi's armor(4800)
 
 ;--QuickSilver flask list
 ;FlaskDurationQSInit[4] := 4900	; QS1(4800)
-FlaskDurationQSInit[5] := 6200	; QS2(6100)/Rotgut(6000)
+FlaskDurationQSInit[5] := 4900	; QS2(6100)/Rotgut(6000)
 
 queueLife := 1				; set to 0 to spam the flasks instead
 queueBuff := 0				; set to 0 to spam the flasks instead
 timeBeforeHeal := 0			; time before using a life flask when pressing the attack button, set unless you got 0 ES(default=0)
 attacktimeout := 2000		; time between attacks(default=500)
+attacktimeout_long := 10000	; ingame toggle for the attack timeout
+attacktimeout_life := 10000	; time to keep using life flasks after attacking
 qstimeout := 200			; time to keep using qs after clicking(default=200)
-osb := "r"					; oh Shit button to spam 2 defensive skill at once when pressing "w", set to 0 if not used(default="r")
-							; I used this for vaal skills, to change the default("w") hotkey go down to the button section.
+osb := "t"					; oh-Shit buttons to spam 2 defensive skill at once when pressing "w", set to 0 if not used(default="r")
+osb2 := "2"					; I used this for vaal skills, to change the default("w") hotkey go down to the button section.
+							; Also the key will be assigned as the short/long attack timeout toggle and will not work
 
 ; variables to inittialize
 FlaskDuration := []
@@ -79,15 +82,18 @@ FlaskLastUsedBuff := []
 FlaskLastUsedQS := []
 
 lastLifeFlaskUsed := 0		;life
-lastBuffFlaskUsed := 0	;buff
-lastQSFlaskUsed := 0	;qs
+lastBuffFlaskUsed := 0		;buff
+lastQSFlaskUsed := 0		;qs
 
 UseFlasks := false
 HoldRightClick := false
 HoldLeftClick := false
 LastRightClick := 0
 LastLeftClick := 0
+longTimeout := false	; toggle attacktimeout ingame
+attacktimeout_backup := -1
 
+chatPause := false
 ;----------------------------------------------------------------------
 ; The following are used for fast ctrl-click from the Inventory screen
 ; using alt-c.  The coordinates for ix,iy come from MouseGetPos (Alt+g)
@@ -129,10 +135,19 @@ StashSize := [ 12,  24]
 ; Put the coordinates of alternate attack skill in AltX, AltY
 ; WeaponSwap determines if alt gem is in inventory or alternate weapon.
 ;----------------------------------------------------------------------
-PrimX := 2080
-PrimY := 334
-AltX  := 2505
-AltY  := 820
+PrimX := 1483
+PrimY := 306
+AltX  := 1295
+AltY  := 617
+pixelOffset := 10		;Offset of pixels to randomize in order to not click twice on the same pixel(would be a huge red flag otherwise)
+;~ aux_PrimXa := PrimX-pixelOffset
+;~ aux_PrimXb := PrimX+pixelOffset
+;~ aux_PrimYa := PrimY-pixelOffset
+;~ aux_PrimYb := PrimY+pixelOffset
+;~ aux_AltXa := AltX-pixelOffset
+;~ aux_AltXb := AltX+pixelOffset
+;~ aux_AltYa := AltY-pixelOffset
+;~ aux_AltYb := AltY+pixelOffset
 WeaponSwap := False
 
 ;----------------------------------------------------------------------
@@ -143,18 +158,26 @@ WeaponSwap := False
 Loop {
 	if (UseFlasks) {
 		; have we attacked in the last 0.5 seconds?
-		if ((A_TickCount - LastRightClick) < attacktimeout) {
+		if ((A_TickCount - LastRightClick) < attacktimeout_life) {
 			if (timeBeforeHeal <> 0) {
 				SetTimer, CycleAllFlasksWhenReady, -%timeBeforeHeal%
 			} else {
 				Gosub, CycleAllFlasksWhenReady
 			}
+			;Gosub, CycleAllSpellsWhenReady
+		} else {
+			; We haven't attacked recently, but are we channeling/continuous?
+			if (HoldRightClick) {
+				Gosub, CycleAllFlasksWhenReady
+				;Gosub, CycleAllSpellsWhenReady
+			}
+		}
+		if ((A_TickCount - LastRightClick) < attacktimeout) {
 			Gosub, CycleAllSpellsWhenReady
 			Gosub, CycleBuffFlasksWhenReady
 		} else {
 			; We haven't attacked recently, but are we channeling/continuous?
 			if (HoldRightClick) {
-				Gosub, CycleAllFlasksWhenReady
 				Gosub, CycleAllSpellsWhenReady
 				Gosub, CycleBuffFlasksWhenReady
 			}
@@ -169,11 +192,63 @@ Loop {
 	}
 }
 
+; 'Enter' in virtualkeyboard code/scancode for using apps like poe trades companion and such(doesn't actually work yet)
+;note that this won't be consistent when manually using the chat without the enter key(like clicking outside of it)
+;~VK0x0D::
+;~^SC1C::
+;~SC01C::
+;~$^VK0xD::
+;~VK0xD::
+;~ ~Enter::
+	;~ ; do nothing if its disabled/paused 
+	;~ if (UseFlasks | chatPause) {
+		;~ chatPause := not chatPause
+		;~ UseFlasks := not UseFlasks
+		;~ if UseFlasks {
+			;~ ; initialize start of auto-flask use
+			;~ ToolTip, AutoFlasks, 0, 0
+			;~ SetTimer, RemoveToolTip, Off
+
+			;~ ; reset usage timers for all flasks
+			;~ LifeFlasks := 0
+			;~ BuffFlasks := 0
+			;~ QSFlasks := 0
+			;~ for i in FlaskDurationInit {
+				;~ FlaskLastUsed[i] := 0
+				;~ FlaskDuration[i] := FlaskDurationInit[i]
+				;~ LifeFlasks += 1
+			;~ }
+			;~ for i in SpellDurationInit {
+				;~ SpellLastUsed[i] := 0
+				;~ SpellDuration[i] := SpellDurationInit[i]
+			;~ }
+			;~ for i in FlaskDurationBuffInit {
+				;~ FlaskLastUsedBuff[i] := 0
+				;~ FlaskDurationBuff[i] := FlaskDurationBuffInit[i]
+				;~ BuffFlasks += 1
+			;~ }
+			;~ for i in FlaskDurationQSInit {
+				;~ FlaskLastUsedQS[i] := 0
+				;~ FlaskDurationQS[i] := FlaskDurationQSInit[i]
+				;~ QSFlasks += 1
+			;~ }
+		;~ } else {
+			;~ if (longTimeout) {
+				;~ attacktimeout := attacktimeout_backup
+				;~ longTimeout := false
+			;~ }
+			;~ ToolTip, AutoFlasks Off, 0, 0
+			;~ SetTimer, RemoveToolTip, -5000
+		;~ }
+	;~ }
+	;~ return
+
+z::
 F6::
 	UseFlasks := not UseFlasks
 	if UseFlasks {
 		; initialize start of auto-flask use
-		ToolTip, UseFlasks On, 0, 0
+		ToolTip, AutoFlasks, 0, 0
 		SetTimer, RemoveToolTip, Off
 
 		; reset usage timers for all flasks
@@ -200,15 +275,19 @@ F6::
 			QSFlasks += 1
 		}
 	} else {
-		ToolTip, UseFlasks Off, 0, 0
+		if (longTimeout) {
+			attacktimeout := attacktimeout_backup
+			longTimeout := false
+		}
+		ToolTip, AutoFlasks Off, 0, 0
 		SetTimer, RemoveToolTip, -5000
 	}
 	return
 
 ; A little tweak for my preference
 RemoveToolTip:
-ToolTip
-return
+	ToolTip
+	return
 
 ;----------------------------------------------------------------------
 ; To use a different moust button (default is right click), change the
@@ -243,11 +322,55 @@ return
 	; pass-thru and release the right mouse button
 	HoldLeftClick := false
 	return
+
+;~ ; Dynamically set the hotkey to de-assign the 1st button triggered when pressing the defensives
+;~ Hotkey, %osb%, Attack_timeout_toggle
+	;~ return
+	
+;~ Attack_timeout_toggle:
+	;~ if (attacktimeout_backup == -1) {
+		;~ attacktimeout_backup := attacktimeout
+	;~ }
+	;~ if UseFlasks {
+		;~ longTimeout := not longTimeout
+		;~ if (longTimeout) {
+			;~ attacktimeout := attacktimeout_long
+			;~ ToolTip, AutoFlasks/%attacktimeout%, 0, 0
+		;~ } else {
+			;~ attacktimeout := attacktimeout_backup
+			;~ ToolTip, AutoFlasks/%attacktimeout%, 0, 0
+		;~ }
+	;~ }
+	;~ return
+
+;~ ~t::
+	;~ if (attacktimeout_backup == -1) {
+		;~ attacktimeout_backup := attacktimeout
+	;~ }
+	;~ if UseFlasks {
+		;~ longTimeout := not longTimeout
+		;~ if (longTimeout) {
+			;~ attacktimeout := attacktimeout_long
+			;~ ToolTip, AutoFlasks/%attacktimeout%, 0, 0
+		;~ } else {
+			;~ attacktimeout := attacktimeout_backup
+			;~ ToolTip, AutoFlasks/%attacktimeout%, 0, 0
+		;~ }
+	;~ }
+	;~ return
 	
 ~W::
 	if(UseFlasks && osb <> 0) {
 		send %osb%
+		if(osb2 <> 0){
+			send %osb2%
+		}
 	}
+	return
+	
++f::
+	; disconnect hotkey
+	Run cports.exe /close * * * * PathOfExile_x64.exe
 	return
 
 ;----------------------------------------------------------------------
@@ -268,40 +391,40 @@ return
 	FlaskDuration[2] := FlaskDurationInit[2] + VariableDelay ; randomize duration to simulate human
 	return
 
-~3::
-	; pass-thru and start timer for flask 3
-	FlaskLastUsed[3] := A_TickCount
-	Random, VariableDelay, -99, 99
-	FlaskDuration[3] := FlaskDurationInit[3] + VariableDelay ; randomize duration to simulate human
-	return
+;~ ~3::
+	;~ ; pass-thru and start timer for flask 3
+	;~ FlaskLastUsed[3] := A_TickCount
+	;~ Random, VariableDelay, -99, 99
+	;~ FlaskDuration[3] := FlaskDurationInit[3] + VariableDelay ; randomize duration to simulate human
+	;~ return
 
-~4::
-	; pass-thru and start timer for flask 4
-	FlaskLastUsed[4] := A_TickCount
-	Random, VariableDelay, -99, 99
-	FlaskDuration[4] := FlaskDurationInit[4] + VariableDelay ; randomize duration to simulate human
-	return
+;~ ~4::
+	;~ ; pass-thru and start timer for flask 4
+	;~ FlaskLastUsed[4] := A_TickCount
+	;~ Random, VariableDelay, -99, 99
+	;~ FlaskDuration[4] := FlaskDurationInit[4] + VariableDelay ; randomize duration to simulate human
+	;~ return
 
-~5::
-	; pass-thru and start timer for flask 5
-	FlaskLastUsed[5] := A_TickCount
-	Random, VariableDelay, -99, 99
-	FlaskDuration[5] := FlaskDurationInit[5] + VariableDelay ; randomize duration to simulate human
-	return
+;~ ~5::
+	;~ ; pass-thru and start timer for flask 5
+	;~ FlaskLastUsed[5] := A_TickCount
+	;~ Random, VariableDelay, -99, 99
+	;~ FlaskDuration[5] := FlaskDurationInit[5] + VariableDelay ; randomize duration to simulate human
+	;~ return
 
-~q::
-	; pass-thru and start timer for flask 5
-	SpellLastUsed["q"] := A_TickCount
-	Random, VariableDelay, -99, 99
-	SpellDuration[5] := SpellDurationInit[5] + VariableDelay ; randomize duration to simulate human
-	return
+;~ ~q::
+	;~ ; pass-thru and start timer for flask 5
+	;~ SpellLastUsed["q"] := A_TickCount
+	;~ Random, VariableDelay, -99, 99
+	;~ SpellDuration[5] := SpellDurationInit[5] + VariableDelay ; randomize duration to simulate human
+	;~ return
 
-~e::
-	; pass-thru and start timer for flask 5
-	SpellLastUsed["e"] := A_TickCount
-	Random, VariableDelay, -99, 99
-	SpellDuration[5] := SpellDurationInit[5] + VariableDelay ; randomize duration to simulate human
-	return
+;~ ~t::
+	;~ ; pass-thru and start timer for flask 5
+	;~ SpellLastUsed["e"] := A_TickCount
+	;~ Random, VariableDelay, -99, 99
+	;~ SpellDuration[5] := SpellDurationInit[5] + VariableDelay ; randomize duration to simulate human
+	;~ return
 
 ;----------------------------------------------------------------------
 ; Use all flasks, now.  A variable delay is included between flasks
@@ -464,24 +587,39 @@ GuiEscape:
 ; weapon slot is used for holding gems.
 ;----------------------------------------------------------------------
 !s::
+	o_PrimX := 0
+	o_PrimY := 0
+	o_AltX := 0
+	o_AltY := 0
+	Random, o_PirimX, (PrimX-pixelOffset), (PrimX+pixelOffset)
+	Random, o_PrimY, (PrimY-pixelOffset), (PrimY+pixelOffset)
+	Random, o_AltX, (AltX-pixelOffset), (AltX+pixelOffset)
+	Random, o_iAltY, (AltY-pixelOffset), (AltY+pixelOffset)
 	MouseGetPos, x, y					; Save the current mouse position
 	Send i
-	Sleep 100
-	Send {Click Right, %PrimX%, %PrimY%}
-	Sleep 100
+	Random, VariableDelay, -99, 99
+	Sleep %VariableDelay%
+	Send {Click Right, %o_PrimX%, %o_PrimY%}
+	Random, VariableDelay, -99, 99
+	Sleep %VariableDelay%
 	if (WeaponSwap) {
 		Send {x}
-		Sleep 100
+		Random, VariableDelay, -99, 99
+		Sleep %VariableDelay%
 	}
-	Send {Click %AltX%, %AltY%}
-	Sleep 100
+	Send {Click %o_AltX%, %o_AltY%}
+	Random, VariableDelay, -99, 99
+	Sleep %VariableDelay%
 	if (WeaponSwap) {
 		Send {x}
-		Sleep 100
+		Random, VariableDelay, -99, 99
+		Sleep %VariableDelay%
 	}
-	Send {Click %PrimX%, %PrimY%}
-	Sleep 100
+	Send {Click %o_PrimX%, %o_PrimY%}
+	Random, VariableDelay, -99, 99
+	Sleep %VariableDelay%
 	Send i
-	Sleep 100
+	Random, VariableDelay, -99, 99
+	Sleep %VariableDelay%
 	MouseMove, x, y
 	Return

@@ -1,2 +1,5 @@
 *.Ink
 *.bak
+cports.exe
+*.cfg
+*.chm
