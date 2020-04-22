@@ -65,7 +65,7 @@ qstimeout := 200			; time to keep using qs after clicking(default=200)
 osb := "t"					; oh-Shit buttons to spam 2 defensive skill at once when pressing "w", set to 0 if not used(default="r")
 osb2 := "2"					; I used this for vaal skills, to change the default("w") hotkey go down to the hotkey section.
 
-; variables to inittialize
+; variables to initialize
 FlaskDuration := []
 SpellDuration := []
 FlaskDurationBuff := []
@@ -139,14 +139,14 @@ PrimY := 306
 AltX  := 1295
 AltY  := 617
 pixelOffset := 10		;Offset of pixels to randomize in order to not click twice on the same pixel(would be a huge red flag otherwise)
-;~ aux_PrimXa := PrimX-pixelOffset
-;~ aux_PrimXb := PrimX+pixelOffset
-;~ aux_PrimYa := PrimY-pixelOffset
-;~ aux_PrimYb := PrimY+pixelOffset
-;~ aux_AltXa := AltX-pixelOffset
-;~ aux_AltXb := AltX+pixelOffset
-;~ aux_AltYa := AltY-pixelOffset
-;~ aux_AltYb := AltY+pixelOffset
+aux_PrimXa := PrimX-pixelOffset
+aux_PrimXb := PrimX+pixelOffset
+aux_PrimYa := PrimY-pixelOffset
+aux_PrimYb := PrimY+pixelOffset
+aux_AltXa := AltX-pixelOffset
+aux_AltXb := AltX+pixelOffset
+aux_AltYa := AltY-pixelOffset
+aux_AltYb := AltY+pixelOffset
 WeaponSwap := False
 
 ;----------------------------------------------------------------------
@@ -590,10 +590,10 @@ GuiEscape:
 	o_PrimY := 0
 	o_AltX := 0
 	o_AltY := 0
-	Random, o_PirimX, (PrimX-pixelOffset), (PrimX+pixelOffset)
-	Random, o_PrimY, (PrimY-pixelOffset), (PrimY+pixelOffset)
-	Random, o_AltX, (AltX-pixelOffset), (AltX+pixelOffset)
-	Random, o_iAltY, (AltY-pixelOffset), (AltY+pixelOffset)
+	Random, o_PrimX, aux_PrimXa, aux_PrimXb
+	Random, o_PrimY, aux_PrimYa, aux_PrimYb
+	Random, o_AltX, aux_AltXa, aux_AltXb
+	Random, o_AltY, aux_AltYa, aux_AltYb
 	MouseGetPos, x, y					; Save the current mouse position
 	Send i
 	Random, VariableDelay, -99, 99
