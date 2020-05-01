@@ -44,8 +44,8 @@ FlaskDurationInit[2] := 1000	; 2ndkarui(2700)/life(4000)/basalt(4500)
 ;FlaskDurationInit[5] := 4900	; QS(4800)
 
 ;--Spell list
-SpellDurationInit["q"] := 9700	; Molten Shell(~8700)/MS+19%(~9500)
 SpellDurationInit["e"] := 3200	; Convocation(3000/3100)
+SpellDurationInit["q"] := 9700	; Molten Shell(~8700)/MS+19%(~9500)
 
 ;--Buff flask list(queued one after another)
 FlaskDurationBuffInit[3] := 4900	; divination(5000)/armor(4000)/basalt(5400)
@@ -53,7 +53,7 @@ FlaskDurationBuffInit[4] := 5500	; Rumi's armor(4800)
 
 ;--QuickSilver flask list
 ;FlaskDurationQSInit[4] := 4900	; QS1(4800)
-FlaskDurationQSInit[5] := 4900	; QS2(6100)/Rotgut(6000)
+FlaskDurationQSInit[5] := 6200	; QS2(6100)/Rotgut(6000)
 
 queueLife := 1				; set to 0 to spam the flasks instead
 queueBuff := 0				; set to 0 to spam the flasks instead
@@ -132,13 +132,15 @@ StashSize := [ 12,  24]
 ; when you use one skill for clearing and another for bossing.
 ; Put the coordinates of your primary attack skill in PrimX, PrimY
 ; Put the coordinates of alternate attack skill in AltX, AltY
+; Note that the coordinates should be from the CENTER of the gem slot to work correctly due to the random variable.
 ; WeaponSwap determines if alt gem is in inventory or alternate weapon.
 ;----------------------------------------------------------------------
-PrimX := 1483
+;This one is for swapping the portal gem in, using it adn then swappig it out(double swap)
+PrimX := 1483	;gem to swap out
 PrimY := 306
-AltX  := 1295
+AltX  := 1295	;portal gem in inventory
 AltY  := 617
-pixelOffset := 10		;Offset of pixels to randomize in order to not click twice on the same pixel(would be a huge red flag otherwise)
+pixelOffset := 3		;Offset of pixels to randomize in order to not click twice on the same pixel(would be a huge red flag otherwise)
 aux_PrimXa := PrimX-pixelOffset
 aux_PrimXb := PrimX+pixelOffset
 aux_PrimYa := PrimY-pixelOffset
@@ -149,6 +151,21 @@ aux_AltYa := AltY-pixelOffset
 aux_AltYb := AltY+pixelOffset
 WeaponSwap := False
 
+;Regular gem swap
+PrimX_2 := 1353
+PrimY_2 := 174
+AltX_2  := 1560
+AltY_2  := 135
+pixelOffset_2 := 3		;Offset of pixels to randomize in order to not click twice on the same pixel(would be a huge red flag otherwise)
+aux_PrimXa_2 := PrimX_2-pixelOffset_2
+aux_PrimXb_2 := PrimX_2+pixelOffset_2
+aux_PrimYa_2 := PrimY_2-pixelOffset_2
+aux_PrimYb_2 := PrimY_2+pixelOffset_2
+aux_AltXa_2 := AltX_2-pixelOffset_2
+aux_AltXb_2 := AltX_2+pixelOffset_2
+aux_AltYa_2 := AltY_2-pixelOffset_2
+aux_AltYb_2 := AltY_2+pixelOffset_2
+WeaponSwap_2 := False
 ;----------------------------------------------------------------------
 ; Main program loop - basics are that we use flasks whenever flask
 ; usage is enabled via hotkey (default is F12), and we've attacked
@@ -198,52 +215,54 @@ Loop {
 ;~SC01C::
 ;~$^VK0xD::
 ;~VK0xD::
-;~ ~Enter::
-	;~ ; do nothing if its disabled/paused 
-	;~ if (UseFlasks | chatPause) {
-		;~ chatPause := not chatPause
-		;~ UseFlasks := not UseFlasks
-		;~ if UseFlasks {
-			;~ ; initialize start of auto-flask use
-			;~ ToolTip, AutoFlasks, 0, 0
-			;~ SetTimer, RemoveToolTip, Off
+~!Enter::
+~+Enter::
+~Enter::
+	; do nothing if its disabled/paused 
+	if (UseFlasks | chatPause) {
+		chatPause := not chatPause
+		UseFlasks := not UseFlasks
+		if UseFlasks {
+			; initialize start of auto-flask use
+			ToolTip, AutoFlasks, 0, 0
+			SetTimer, RemoveToolTip, Off
 
-			;~ ; reset usage timers for all flasks
-			;~ LifeFlasks := 0
-			;~ BuffFlasks := 0
-			;~ QSFlasks := 0
-			;~ for i in FlaskDurationInit {
-				;~ FlaskLastUsed[i] := 0
-				;~ FlaskDuration[i] := FlaskDurationInit[i]
-				;~ LifeFlasks += 1
-			;~ }
-			;~ for i in SpellDurationInit {
-				;~ SpellLastUsed[i] := 0
-				;~ SpellDuration[i] := SpellDurationInit[i]
-			;~ }
-			;~ for i in FlaskDurationBuffInit {
-				;~ FlaskLastUsedBuff[i] := 0
-				;~ FlaskDurationBuff[i] := FlaskDurationBuffInit[i]
-				;~ BuffFlasks += 1
-			;~ }
-			;~ for i in FlaskDurationQSInit {
-				;~ FlaskLastUsedQS[i] := 0
-				;~ FlaskDurationQS[i] := FlaskDurationQSInit[i]
-				;~ QSFlasks += 1
-			;~ }
-		;~ } else {
-			;~ if (longTimeout) {
-				;~ attacktimeout := attacktimeout_backup
-				;~ longTimeout := false
-			;~ }
-			;~ ToolTip, AutoFlasks Off, 0, 0
-			;~ SetTimer, RemoveToolTip, -5000
-		;~ }
-	;~ }
-	;~ return
+			; reset usage timers for all flasks
+			LifeFlasks := 0
+			BuffFlasks := 0
+			QSFlasks := 0
+			for i in FlaskDurationInit {
+				FlaskLastUsed[i] := 0
+				FlaskDuration[i] := FlaskDurationInit[i]
+				LifeFlasks += 1
+			}
+			for i in SpellDurationInit {
+				SpellLastUsed[i] := 0
+				SpellDuration[i] := SpellDurationInit[i]
+			}
+			for i in FlaskDurationBuffInit {
+				FlaskLastUsedBuff[i] := 0
+				FlaskDurationBuff[i] := FlaskDurationBuffInit[i]
+				BuffFlasks += 1
+			}
+			for i in FlaskDurationQSInit {
+				FlaskLastUsedQS[i] := 0
+				FlaskDurationQS[i] := FlaskDurationQSInit[i]
+				QSFlasks += 1
+			}
+		} else {
+			if (longTimeout) {
+				attacktimeout := attacktimeout_backup
+				longTimeout := false
+			}
+			ToolTip, AutoFlasks Off, 0, 0
+			SetTimer, RemoveToolTip, -5000
+		}
+	}
+	return
 
 z::
-F6::
+	BlockInput MouseMoveOff	;disable block mouse input in case it gets stuck somehow(failsafe, not necessary at all)
 	UseFlasks := not UseFlasks
 	if UseFlasks {
 		; initialize start of auto-flask use
@@ -342,21 +361,21 @@ RemoveToolTip:
 	;~ }
 	;~ return
 
-;~ ~t::
-	;~ if (attacktimeout_backup == -1) {
-		;~ attacktimeout_backup := attacktimeout
-	;~ }
-	;~ if UseFlasks {
-		;~ longTimeout := not longTimeout
-		;~ if (longTimeout) {
-			;~ attacktimeout := attacktimeout_long
-			;~ ToolTip, AutoFlasks/%attacktimeout%, 0, 0
-		;~ } else {
-			;~ attacktimeout := attacktimeout_backup
-			;~ ToolTip, AutoFlasks/%attacktimeout%, 0, 0
-		;~ }
-	;~ }
-	;~ return
+~<::
+	if (attacktimeout_backup == -1) {
+		attacktimeout_backup := attacktimeout
+	}
+	if UseFlasks {
+		longTimeout := not longTimeout
+		if (longTimeout) {
+			attacktimeout := attacktimeout_long
+			ToolTip, AutoFlasks/%attacktimeout%, 0, 0
+		} else {
+			attacktimeout := attacktimeout_backup
+			ToolTip, AutoFlasks/%attacktimeout%, 0, 0
+		}
+	}
+	return
 	
 ~W::
 	if(UseFlasks && osb <> 0) {
@@ -585,6 +604,49 @@ GuiEscape:
 ; Alt+s - Swap a skill gem with an alternate. Gems must be same color if alt
 ; weapon slot is used for holding gems.
 ;----------------------------------------------------------------------
+!a::
+	o_PrimX_2 := 0
+	o_PrimY_2 := 0
+	o_AltX_2 := 0
+	o_AltY_2 := 0
+	Random, o_PrimX_2, aux_PrimXa_2, aux_PrimXb_2
+	Random, o_PrimY_2, aux_PrimYa_2, aux_PrimYb_2
+	Random, o_AltX_2, aux_AltXa_2, aux_AltXb_2
+	Random, o_AltY_2, aux_AltYa_2, aux_AltYb_2
+	MouseGetPos, x, y					; Save the current mouse position
+	Send \	;close all tabs
+	Random, VariableDelay, 50, 100
+	Send i
+	Random, VariableDelay, 250, 500
+	Sleep %VariableDelay%
+	BlockInput MouseMove		;block mouse input to not mess with the script
+	Send {Click Right, %o_PrimX_2%, %o_PrimY_2%}
+	Random, VariableDelay, 150, 250
+	Sleep %VariableDelay%
+	if (WeaponSwap_2) {
+		Send {x}
+		Random, VariableDelay, 150, 250
+		Sleep %VariableDelay%
+	}
+	Send {Click %o_AltX_2%, %o_AltY_2%}
+	Random, VariableDelay, 150, 250
+	Sleep %VariableDelay%
+	if (WeaponSwap_2) {
+		Send {x}
+		Random, VariableDelay, 150, 250
+		Sleep %VariableDelay%
+	}
+	Send {Click %o_PrimX_2%, %o_PrimY_2%}
+	BlockInput MouseMoveOff		;unblock mouse input
+	Random, VariableDelay, 250, 500
+	Sleep %VariableDelay%
+	Send i
+	Random, VariableDelay, 150, 250
+	Sleep %VariableDelay%
+	MouseMove, x, y
+	Return
+
+;Portal Swap
 !s::
 	o_PrimX := 0
 	o_PrimY := 0
@@ -595,30 +657,59 @@ GuiEscape:
 	Random, o_AltX, aux_AltXa, aux_AltXb
 	Random, o_AltY, aux_AltYa, aux_AltYb
 	MouseGetPos, x, y					; Save the current mouse position
-	Send i
-	Random, VariableDelay, -99, 99
+	Send \	;close all tabs
+	Random, VariableDelay, 50, 100
+	Send i	;open inv
+	Random, VariableDelay, 200, 300
 	Sleep %VariableDelay%
-	Send {Click Right, %o_PrimX%, %o_PrimY%}
-	Random, VariableDelay, -99, 99
-	Sleep %VariableDelay%
-	if (WeaponSwap) {
-		Send {x}
-		Random, VariableDelay, -99, 99
-		Sleep %VariableDelay%
-	}
-	Send {Click %o_AltX%, %o_AltY%}
-	Random, VariableDelay, -99, 99
+	BlockInput MouseMove	;block mouse input to not mess with the script coordinates
+	Send {Click Right, %o_PrimX%, %o_PrimY%}	;click gem
+	Random, VariableDelay, 100, 200
 	Sleep %VariableDelay%
 	if (WeaponSwap) {
 		Send {x}
-		Random, VariableDelay, -99, 99
+		Random, VariableDelay, 100, 200
 		Sleep %VariableDelay%
 	}
-	Send {Click %o_PrimX%, %o_PrimY%}
-	Random, VariableDelay, -99, 99
+	Send {Click %o_AltX%, %o_AltY%}		;click portal gem in inventory
+	Random, VariableDelay, 100, 200
 	Sleep %VariableDelay%
+	if (WeaponSwap) {
+		Send {x}
+		Random, VariableDelay, 100, 200
+		Sleep %VariableDelay%
+	}
+	Send {Click %o_PrimX%, %o_PrimY%}	;slot portal
+	
+	Random, VariableDelay, 200, 500
+	Sleep %VariableDelay%
+	Send e	;use portal
+	Random, VariableDelay, 100, 200
+	Sleep %VariableDelay%
+	
+	Send {Click Right, %o_PrimX%, %o_PrimY%}	;click portal gem
+	Random, VariableDelay, 100, 200
+	Sleep %VariableDelay%
+	if (WeaponSwap) {
+		Send {x}
+		Random, VariableDelay, 100, 200
+		Sleep %VariableDelay%
+	}
+	Send {Click %o_AltX%, %o_AltY%}		;click original gem in inventory
+	Random, VariableDelay, 100, 200
+	Sleep %VariableDelay%
+	if (WeaponSwap) {
+		Send {x}
+		Random, VariableDelay, 100, 200
+		Sleep %VariableDelay%
+	}
+	Send {Click %o_PrimX%, %o_PrimY%}	;slot gem back
+	BlockInput MouseMoveOff		;unblock mouse input again
+	Random, VariableDelay, 200, 300
+	Sleep %VariableDelay%
+	
 	Send i
-	Random, VariableDelay, -99, 99
+	Random, VariableDelay, 100, 200
 	Sleep %VariableDelay%
 	MouseMove, x, y
 	Return
