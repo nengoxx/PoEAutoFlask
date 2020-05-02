@@ -46,10 +46,11 @@ FlaskDurationInit[2] := 1000	; 2ndkarui(2700)/life(4000)/basalt(4500)
 ;--Spell list
 SpellDurationInit["e"] := 3200	; Convocation(3000/3100)
 SpellDurationInit["q"] := 9700	; Molten Shell(~8700)/MS+19%(~9500)
+SpellDurationInit["f"] := 14000	; Offering(15000)
 
 ;--Buff flask list(queued one after another)
-FlaskDurationBuffInit[3] := 4900	; divination(5000)/armor(4000)/basalt(5400)
-FlaskDurationBuffInit[4] := 5500	; Rumi's armor(4800)
+FlaskDurationBuffInit[3] := 6500	; divination(5000)/armor(4000)/basalt(5400)/experimenter's(6200)
+FlaskDurationBuffInit[4] := 5600	; Rumi's armor(4800)
 
 ;--QuickSilver flask list
 ;FlaskDurationQSInit[4] := 4900	; QS1(4800)
@@ -59,11 +60,18 @@ queueLife := 1				; set to 0 to spam the flasks instead
 queueBuff := 0				; set to 0 to spam the flasks instead
 timeBeforeHeal := 0			; time before using a life flask when pressing the attack button, set unless you got 0 ES(default=0)
 attacktimeout := 2000		; time between attacks(default=500)
-attacktimeout_long := 10000	; ingame toggle for the attack timeout
-attacktimeout_life := 10000	; time to keep using life flasks after attacking
+attacktimeout_long := 12000	; ingame toggle for the attack timeout
+attacktimeout_life := 2000	; time to keep using life flasks after attacking
 qstimeout := 200			; time to keep using qs after clicking(default=200)
 osb := "t"					; oh-Shit buttons to spam 2 defensive skill at once when pressing "w", set to 0 if not used(default="r")
 osb2 := "2"					; I used this for vaal skills, to change the default("w") hotkey go down to the hotkey section.
+; spells to trigger when scrolling the mouse wheel or shift set to 0 to disable(default="f")
+WUButtonTrigger1 := 0
+WUButtonTrigger2 := 0	;"{MButton}"
+WDButtonTrigger1 := 0	
+WDButtonTrigger2 := 0	
+ShiftTrigger1 := 0
+ShiftTrigger2 := 0
 
 ; variables to initialize
 FlaskDuration := []
@@ -166,6 +174,22 @@ aux_AltXb_2 := AltX_2+pixelOffset_2
 aux_AltYa_2 := AltY_2-pixelOffset_2
 aux_AltYb_2 := AltY_2+pixelOffset_2
 WeaponSwap_2 := False
+
+;Regular gem swap 3 (bossing vs mapping gem)
+PrimX_3 := 1742
+PrimY_3 := 370
+AltX_3  := 1298
+AltY_3  := 717
+pixelOffset_3 := 2		;Offset of pixels to randomize in order to not click twice on the same pixel(would be a huge red flag otherwise)
+aux_PrimXa_3 := PrimX_3-pixelOffset_3
+aux_PrimXb_3 := PrimX_3+pixelOffset_3
+aux_PrimYa_3 := PrimY_3-pixelOffset_3
+aux_PrimYb_3 := PrimY_3+pixelOffset_3
+aux_AltXa_3 := AltX_3-pixelOffset_3
+aux_AltXb_3 := AltX_3+pixelOffset_3
+aux_AltYa_3 := AltY_3-pixelOffset_3
+aux_AltYb_3 := AltY_3+pixelOffset_3
+WeaponSwap_3 := False
 ;----------------------------------------------------------------------
 ; Main program loop - basics are that we use flasks whenever flask
 ; usage is enabled via hotkey (default is F12), and we've attacked
@@ -340,6 +364,36 @@ RemoveToolTip:
 	; pass-thru and release the right mouse button
 	HoldLeftClick := false
 	return
+	
+~Shift::
+	; trigger 2 spells with middle mouse button
+	if (UseFlasks && (ShiftTrigger1 <> 0)) {
+		Send %ShiftTrigger1%
+		if (ShiftTrigger2 <> 0){
+			Send %ShiftTrigger2%
+		}
+	}
+	return
+	
+~WheelUp::
+	; trigger 2 spells with middle mouse button
+	if (UseFlasks && (WUButtonTrigger1 <> 0)) {
+		Send %WUButtonTrigger1%
+		if (WUButtonTrigger2 <> 0){
+			Send %WUButtonTrigger2%
+		}
+	}
+	return
+	
+~WheelDown::
+	; trigger 2 spells with middle mouse button
+	if (UseFlasks && (WDButtonTrigger1 <> 0)) {
+		Send %WDButtonTrigger1%
+		if (WDButtonTrigger2 <> 0){
+			Send %WDButtonTrigger2%
+		}
+	}
+	return
 
 ;~ ; Dynamically set the hotkey to de-assign the 1st button triggered when pressing the defensives
 ;~ Hotkey, %osb%, Attack_timeout_toggle
@@ -387,8 +441,10 @@ RemoveToolTip:
 	return
 	
 +f::
-	; disconnect hotkey
-	Run cports.exe /close * * * * PathOfExile_x64.exe
+	if UseFlasks {
+		; disconnect hotkey
+		Run cports.exe /close * * * * PathOfExile_x64.exe
+	}
 	return
 
 ;----------------------------------------------------------------------
@@ -620,6 +676,7 @@ GuiEscape:
 	Random, VariableDelay, 250, 500
 	Sleep %VariableDelay%
 	BlockInput MouseMove		;block mouse input to not mess with the script
+	BlockInput Mouse
 	Send {Click Right, %o_PrimX_2%, %o_PrimY_2%}
 	Random, VariableDelay, 150, 250
 	Sleep %VariableDelay%
@@ -638,12 +695,61 @@ GuiEscape:
 	}
 	Send {Click %o_PrimX_2%, %o_PrimY_2%}
 	BlockInput MouseMoveOff		;unblock mouse input
+	BlockInput Off
 	Random, VariableDelay, 250, 500
 	Sleep %VariableDelay%
 	Send i
 	Random, VariableDelay, 150, 250
 	Sleep %VariableDelay%
 	MouseMove, x, y
+	Return
+	
+~q::
+	o_PrimX_3 := 0
+	o_PrimY_3 := 0
+	o_AltX_3 := 0
+	o_AltY_3 := 0
+	Random, o_PrimX_3, aux_PrimXa_3, aux_PrimXb_3
+	Random, o_PrimY_3, aux_PrimYa_3, aux_PrimYb_3
+	Random, o_AltX_3, aux_AltXa_3, aux_AltXb_3
+	Random, o_AltY_3, aux_AltYa_3, aux_AltYb_3
+	MouseGetPos, x, y					; Save the current mouse position
+	Send \	;close all tabs
+	Random, VariableDelay, 50, 100
+	BlockInput MouseMove		;block mouse input to not mess with the script
+	BlockInput Mouse
+	Send {LButton up}	;failsafe for when using the script mid combat when we are holding buttons and such(we could grab the equipment otherwise)
+	Send {RButton up}
+	Send i
+	Random, VariableDelay, 150, 200
+	Sleep %VariableDelay%
+	Send {Click Right, %o_PrimX_3%, %o_PrimY_3%}
+	Random, VariableDelay, 100, 200
+	Sleep %VariableDelay%
+	if (WeaponSwap_3) {
+		Send {x}
+		Random, VariableDelay, 100, 200
+		Sleep %VariableDelay%
+	}
+	Send {Click %o_AltX_3%, %o_AltY_3%}
+	Random, VariableDelay, 100, 200
+	Sleep %VariableDelay%
+	if (WeaponSwap_3) {
+		Send {x}
+		Random, VariableDelay, 100, 200
+		Sleep %VariableDelay%
+	}
+	Send {Click %o_PrimX_3%, %o_PrimY_3%}
+	Random, VariableDelay, 100, 200
+	Sleep %VariableDelay%
+	Send {LButton up}	;failsafe for when using the script mid combat when we are holding buttons and such(we could grab the equipment otherwise)
+	Send {RButton up}
+	Send i
+	Random, VariableDelay, 100, 200
+	Sleep %VariableDelay%
+	MouseMove, x, y
+	BlockInput MouseMoveOff		;unblock mouse input
+	BlockInput Off
 	Return
 
 ;Portal Swap
@@ -663,6 +769,7 @@ GuiEscape:
 	Random, VariableDelay, 200, 300
 	Sleep %VariableDelay%
 	BlockInput MouseMove	;block mouse input to not mess with the script coordinates
+	BlockInput Mouse
 	Send {Click Right, %o_PrimX%, %o_PrimY%}	;click gem
 	Random, VariableDelay, 100, 200
 	Sleep %VariableDelay%
@@ -705,6 +812,7 @@ GuiEscape:
 	}
 	Send {Click %o_PrimX%, %o_PrimY%}	;slot gem back
 	BlockInput MouseMoveOff		;unblock mouse input again
+	BlockInput Off
 	Random, VariableDelay, 200, 300
 	Sleep %VariableDelay%
 	
