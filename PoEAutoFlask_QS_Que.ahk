@@ -37,26 +37,26 @@ QSFlasks := 0
 ; Note: Delete the last line (["e"]), or set value to 0, if you don't use a buff skill
 ;----------------------------------------------------------------------
 ;--Life Flask list (currently spammable flasks and spells on cd)
-FlaskDurationInit[1] := 500 ;500	; karui life(2500)/Forbidden taste(4000)
+FlaskDurationInit[1] := 500	; karui life(2500)/Forbidden taste(4000)
 ;FlaskDurationInit[2] := 4000		; 2ndkarui(2700)/life(4000)/basalt(4500)
 ;FlaskDurationInit[3] := 4800		; Rumi's armor(4800)
 ;FlaskDurationInit[4] := 8000		; divination(5000)/armor(4000x2 so they dont stack after 1st time)
 ;FlaskDurationInit[5] := 4900		; QS(4800)
 
 ;--Spell list
-;SpellDurationInit["e"] := 3200		; Convocation(3000/3100)
+;SpellDurationInit["e"] := 750		; Convocation(3000/3100)
 ;SpellDurationInit["q"] := 4100		; PhaseRun(4000)/Molten Shell(~8700)/MS+19%(~9500)
-SpellDurationInit["w"] := 250		;steelskin/vaalMS
-SpellDurationInit["t"] := 10000		;vaalHaste
+;SpellDurationInit["w"] := 250		;steelskin/vaalMS
+SpellDurationInit["t"] := 750		;vaalHaste
 
 ;--Buff flask list(queued one after another)
-FlaskDurationBuffInit[2] := 4900 ;6500		; experimenter's granite(6400)/silver(6000)
-FlaskDurationBuffInit[3] := 5500		; divination(5000)/armor(4000)/basalt(5400)/experimenter's(6200)
-FlaskDurationBuffInit[4] := 4900		; Rumi's armor(4800)/taste of hate(4800)
+FlaskDurationBuffInit[2] := 6400 ;6500		; experimenter's granite(6400)/silver(6000)
+FlaskDurationBuffInit[3] := 5400		; divination(5000)/armor(4000)/basalt(5400)/experimenter's(6200)
+FlaskDurationBuffInit[4] := 6000		; Rumi's armor(4800)/taste of hate(4800)
 
 ;--QuickSilver flask list
 ;FlaskDurationQSInit[4] := 4000	; QS1(4800)
-FlaskDurationQSInit[5] := 6300	; QS2(6100)/Rotgut(6000)
+FlaskDurationQSInit[5] := 6100	; QS2(6100)/Rotgut(6000)
 
 queueLife := 1				; set to 0 to spam the flasks instead
 queueBuff := 0				; set to 0 to spam the flasks instead
@@ -76,6 +76,7 @@ ShiftTrigger1 := 0
 ShiftTrigger2 := 0
 gemswap_hotkey := false	;enable/disable gem swapping except the portal swap
 default_chatkey := true
+RightClickSkill := false ;use skill on right click
 
 ; variables to initialize
 FlaskDuration := []
@@ -158,8 +159,12 @@ StashSize := [ 12,  24]
 ; WeaponSwap determines if alt gem is in inventory or alternate weapon.
 ;----------------------------------------------------------------------
 ;This one is for swapping the portal gem in, using it adn then swappig it out(double swap)
-PrimX := 1380	;gem to swap out
-PrimY := 279
+
+;~ PrimX := 1380	;gem to swap out (cold iron)
+;~ PrimY := 279
+PrimX := 1406	;gem to swap out (clayshaper)
+PrimY := 253
+
 AltX  := 1295	;portal gem in inventory
 AltY  := 617
 pixelOffset := 3		;Offset of pixels to randomize in order to not click twice on the same pixel(would be a huge red flag otherwise)
@@ -407,6 +412,8 @@ RemoveToolTip:
 	ExitApp
 	
 ~LAlt::
+~LWin::
+~LShift::
 ;~LControl::
 	StopBot_noinput()
 	return
@@ -477,6 +484,9 @@ StopBot_noinput(){
 ; 2nd is release of button}
 ;----------------------------------------------------------------------
 ~RButton::
+	if (UseFlasks && RightClickSkill) {
+		Send e
+	}
 	; pass-thru and capture when the last attack (Right click) was done
 	; we also track if the mouse button is being held down for continuous attack(s) and/or channelling skills
 	HoldRightClick := true
@@ -592,19 +602,21 @@ XButton2::
 ; The following 5 hotkeys allow for manual use of flasks while still
 ; tracking optimal recast times.
 ;----------------------------------------------------------------------
-~1::
-	; pass-thru and start timer for flask 1
-	FlaskLastUsed[1] := A_TickCount
-	Random, VariableDelay, -99, 99
-	FlaskDuration[1] := FlaskDurationInit[1] + VariableDelay ; randomize duration to simulate human
-	return
+/* ~1::
+ * 	; pass-thru and start timer for flask 1
+ * 	FlaskLastUsed[1] := A_TickCount
+ * 	Random, VariableDelay, -99, 99
+ * 	FlaskDuration[1] := FlaskDurationInit[1] + VariableDelay ; randomize duration to simulate human
+ * 	return
+ */
 
-~2::
-	; pass-thru and start timer for flask 2
-	FlaskLastUsed[2] := A_TickCount
-	Random, VariableDelay, -99, 99
-	FlaskDuration[2] := FlaskDurationInit[2] + VariableDelay ; randomize duration to simulate human
-	return
+/* ~2::
+ * 	; pass-thru and start timer for flask 2
+ * 	FlaskLastUsed[2] := A_TickCount
+ * 	Random, VariableDelay, -99, 99
+ * 	FlaskDuration[2] := FlaskDurationInit[2] + VariableDelay ; randomize duration to simulate human
+ * 	return
+ */
 
 ;~ ~3::
 	;~ ; pass-thru and start timer for flask 3
@@ -736,93 +748,95 @@ CycleBuffFlasksWhenReady:
 	return
 
 ;----------------------------------------------------------------------
-; Alt+c to Ctrl-Click every location in the (I)nventory screen.
+; ctrl+Alt+c to Ctrl-Click every location in the (I)nventory screen.
 ;----------------------------------------------------------------------
-!c::
-	StopBot()
-	tabbing := not tabbing
-	tab := 2
-	BlockInput MouseMove		;block mouse input to not mess with the script
-	BlockInput Mouse
-	Send {LButton up}	;failsafe for when using the script mid combat when we are holding buttons and such(we could grab the equipment otherwise)
-	Send {RButton up}
-	Loop %tabs% {
-	Loop, 12 {
-		col := ix + (A_Index - 1) * delta
-		Loop, 5 {
-			row := iy + (A_Index - 1) * delta
-			col_rand := col
-			row_rand := row
-			Random col_rand, col+r_delta, col-r_delta
-			Random row_rand, row+r_delta, row-r_delta
-			Send ^{Click, %col_rand%, %row_rand%}
-			;Random, VariableDelay, 50, 150
-			;Sleep %VariableDelay%
-			;Send ^{Click, %col%, %row%}
-		}
-	}
-	
-	if (tabs > 1) {
-		tabsx_rand := tabsx[tab]
-		tabsy_rand := tabsy
-		Random tabsx_rand, tabsx_rand+r_delta, tabsx_rand-r_delta
-		Random tabsy_rand, tabsy_rand+r_delta, tabsy_rand-r_delta
-		;MouseClick, Left, %tabsx_rand%, %tabsy_rand%, 1, 4
-		Send ^{Click, %tabsx_rand%, %tabsy_rand%}
-		tab := tab+1
-	}
-	
-	}
-	tabbing := false
-	BlockInput MouseMoveOff		;unblock mouse input
-	BlockInput Off
-	return
+/* ^!+c::
+ * 	StopBot()
+ * 	tabbing := not tabbing
+ * 	tab := 2
+ * 	BlockInput MouseMove		;block mouse input to not mess with the script
+ * 	BlockInput Mouse
+ * 	Send {LButton up}	;failsafe for when using the script mid combat when we are holding buttons and such(we could grab the equipment otherwise)
+ * 	Send {RButton up}
+ * 	Loop %tabs% {
+ * 	Loop, 12 {
+ * 		col := ix + (A_Index - 1) * delta
+ * 		Loop, 5 {
+ * 			row := iy + (A_Index - 1) * delta
+ * 			col_rand := col
+ * 			row_rand := row
+ * 			Random col_rand, col+r_delta, col-r_delta
+ * 			Random row_rand, row+r_delta, row-r_delta
+ * 			Send ^{Click, %col_rand%, %row_rand%}
+ * 			;Random, VariableDelay, 50, 150
+ * 			;Sleep %VariableDelay%
+ * 			;Send ^{Click, %col%, %row%}
+ * 		}
+ * 	}
+ * 	
+ * 	if (tabs > 1) {
+ * 		tabsx_rand := tabsx[tab]
+ * 		tabsy_rand := tabsy
+ * 		Random tabsx_rand, tabsx_rand+r_delta, tabsx_rand-r_delta
+ * 		Random tabsy_rand, tabsy_rand+r_delta, tabsy_rand-r_delta
+ * 		;MouseClick, Left, %tabsx_rand%, %tabsy_rand%, 1, 4
+ * 		Send ^{Click, %tabsx_rand%, %tabsy_rand%}
+ * 		tab := tab+1
+ * 	}
+ * 	
+ * 	}
+ * 	tabbing := false
+ * 	BlockInput MouseMoveOff		;unblock mouse input
+ * 	BlockInput Off
+ * 	return
+ */
 
 ;----------------------------------------------------------------------
-; Alt+m - Allow setting stash tab size as normal (12x12) or large (24x24)
+; ctrl+Alt+m - Allow setting stash tab size as normal (12x12) or large (24x24)
 ;
 ; vMouseRow := 1 (default) means starting in row 1 of stash tab
 ; always place mouse pointer in starting box
 ;
 ; ItemsToMove := 50 (default) is how many items to move to Inventory
 ;----------------------------------------------------------------------
-!m::
-Gui, Add, Radio, vSelStash checked, Norm Stash Tab (12x12)
-Gui, Add, Radio,, Quad Stash Tab (24x24)
-Gui, Add, Text,, &Clicks:
-Gui, Add, Edit, w50
-Gui, Add, UpDown, vClicks Range1-50, 50
-Gui, Add, Text,, Mouse is in &Row:
-Gui, Add, Edit, w50
-Gui, Add, UpDown, vStartRow Range1-24, 1
-Gui, Add, Button, default, OK
-Gui, Show
-return
-
-ButtonOK:
-GuiClose:
-GuiEscape:
-	Gui, Submit  ; Save each control's contents to its associated variable.
-	MouseGetPos, x, y			; start from current mouse pos
-	ClickCt := 0
-	Loop {
-		Send ^{Click, %x%, %y%}
-		if (++ClickCt > StashSize[SelStash] - StartRow) {
-			StartRow := 1
-			x := x + StashD[SelStash]
-			y := StashY[SelStash]
-			ClickCt := 0
-		} else {
-			y := y + StashD[SelStash]
-		}
-	} until (--Clicks <= 0)
-	Gui, Destroy
-	return
+/* ^!m::
+ * Gui, Add, Radio, vSelStash checked, Norm Stash Tab (12x12)
+ * Gui, Add, Radio,, Quad Stash Tab (24x24)
+ * Gui, Add, Text,, &Clicks:
+ * Gui, Add, Edit, w50
+ * Gui, Add, UpDown, vClicks Range1-50, 50
+ * Gui, Add, Text,, Mouse is in &Row:
+ * Gui, Add, Edit, w50
+ * Gui, Add, UpDown, vStartRow Range1-24, 1
+ * Gui, Add, Button, default, OK
+ * Gui, Show
+ * return
+ * 
+ * ButtonOK:
+ * GuiClose:
+ * GuiEscape:
+ * 	Gui, Submit  ; Save each control's contents to its associated variable.
+ * 	MouseGetPos, x, y			; start from current mouse pos
+ * 	ClickCt := 0
+ * 	Loop {
+ * 		Send ^{Click, %x%, %y%}
+ * 		if (++ClickCt > StashSize[SelStash] - StartRow) {
+ * 			StartRow := 1
+ * 			x := x + StashD[SelStash]
+ * 			y := StashY[SelStash]
+ * 			ClickCt := 0
+ * 		} else {
+ * 			y := y + StashD[SelStash]
+ * 		}
+ * 	} until (--Clicks <= 0)
+ * 	Gui, Destroy
+ * 	return
+ */
 
 ;----------------------------------------------------------------------
-; Alt+g - Get the current screen coordinates of the mouse pointer.
+; ctrl+Alt+g - Get the current screen coordinates of the mouse pointer.
 ;----------------------------------------------------------------------
-!g::
+^!g::
 	MouseGetPos, x, y
 	ToolTip, %x% %y%
 	return
@@ -938,6 +952,7 @@ GuiEscape:
 
 ;Portal Swap
 !s::
+	MouseMove, 0, 1079, 0
 	StopBot()
 	
 	o_PrimX := 0
@@ -984,7 +999,7 @@ GuiEscape:
 	Random, VariableDelay, 200, 500
 	Sleep %VariableDelay%
 	Send e	;use portal
-	Random, VariableDelay, 100, 200
+	Random, VariableDelay, 2300, 2500
 	Sleep %VariableDelay%
 	
 	;Send {Click Right, %o_PrimX%, %o_PrimY%}	;click portal gem
