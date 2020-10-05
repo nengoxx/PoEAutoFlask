@@ -38,7 +38,7 @@ QSFlasks := 0
 ;----------------------------------------------------------------------
 ;--Life Flask list (currently spammable flasks and spells on cd)
 FlaskDurationInit[1] := 500	; karui life(2500)/Forbidden taste(4000)
-;FlaskDurationInit[2] := 4000		; 2ndkarui(2700)/life(4000)/basalt(4500)
+;FlaskDurationInit[2] := 4250		; 2ndkarui(2700)/life(4000)/basalt(4500)
 ;FlaskDurationInit[3] := 4800		; Rumi's armor(4800)
 ;FlaskDurationInit[4] := 8000		; divination(5000)/armor(4000x2 so they dont stack after 1st time)
 ;FlaskDurationInit[5] := 4900		; QS(4800)
@@ -46,19 +46,19 @@ FlaskDurationInit[1] := 500	; karui life(2500)/Forbidden taste(4000)
 ;--Spell list
 ;SpellDurationInit["e"] := 750		; Convocation(3000/3100)
 ;SpellDurationInit["q"] := 4100		; PhaseRun(4000)/Molten Shell(~8700)/MS+19%(~9500)
-;SpellDurationInit["w"] := 250		;steelskin/vaalMS
-SpellDurationInit["t"] := 750		;vaalHaste
+SpellDurationInit["-"] := 2000		;steelskin/vaalMS
+;SpellDurationInit["t"] := 2000		;vaalHaste
 
 ;--Buff flask list(queued one after another)
-FlaskDurationBuffInit[2] := 6400 ;6500		; experimenter's granite(6400)/silver(6000)
-FlaskDurationBuffInit[3] := 5400		; divination(5000)/armor(4000)/basalt(5400)/experimenter's(6200)
-FlaskDurationBuffInit[4] := 6000		; Rumi's armor(4800)/taste of hate(4800)
+FlaskDurationBuffInit[2] := 5100 ;6500		; experimenter's granite(6400)/silver(6000)
+FlaskDurationBuffInit[3] := 4900		; divination(5000)/armor(4000)/basalt(5400)/experimenter's(6200)
+FlaskDurationBuffInit[4] := 4900		; Rumi's armor(4800)/taste of hate(4800)
 
 ;--QuickSilver flask list
 ;FlaskDurationQSInit[4] := 4000	; QS1(4800)
-FlaskDurationQSInit[5] := 6100	; QS2(6100)/Rotgut(6000)
+FlaskDurationQSInit[5] := 4900	; QS2(6100)/Rotgut(6000)
 
-queueLife := 1				; set to 0 to spam the flasks instead
+queueLife := 0				; set to 0 to spam the flasks instead
 queueBuff := 0				; set to 0 to spam the flasks instead
 timeBeforeHeal := 0			; time before using a life flask when pressing the attack button, set unless you got 0 ES(default=0)
 attacktimeout := 2000		; time between attacks(default=500)
@@ -76,7 +76,7 @@ ShiftTrigger1 := 0
 ShiftTrigger2 := 0
 gemswap_hotkey := false	;enable/disable gem swapping except the portal swap
 default_chatkey := true
-RightClickSkill := false ;use skill on right click
+RightClickSkill := true ;use skill on right click
 
 ; variables to initialize
 FlaskDuration := []
@@ -106,7 +106,10 @@ longTimeout := false	; toggle attacktimeout ingame
 attacktimeout_backup := -1
 attacktimeout_life_backup == -1
 
+walkspam := false ;spam while walking(like qs)
+
 chatPause := false
+unfocusedPause := false
 ;----------------------------------------------------------------------
 ; The following are used for fast ctrl-click from the Inventory screen
 ; using alt-c.  The coordinates for ix,iy come from MouseGetPos (Alt+g)
@@ -214,7 +217,45 @@ WeaponSwap_3 := False
 ; usage is enabled via hotkey (default is F12), and we've attacked
 ; within the last 0.5 second (or are channeling/continuous attacking.
 ;----------------------------------------------------------------------
+
 Loop {
+/* 	if (UseFlasks and not WinActive("Path of Exile")){
+ * 		UseFlasks := false
+ * 		if (longTimeout) {
+ * 				attacktimeout := attacktimeout_backup
+ * 				longTimeout := false
+ * 		}
+ * 		ToolTip, AutoFlasks Off, 0, 0
+ * 		SetTimer, RemoveToolTip, -5000
+ * 	}
+ */
+	if (not WinActive("Path of Exile")) {
+		if (UseFlasks) {
+			unfocusedPause := true
+			UseFlasks := false
+			;if (longTimeout) {
+			;	attacktimeout := attacktimeout_backup
+			;	longTimeout := false
+			;}
+			ToolTip, AutoFlasks Off, 0, 0
+			SetTimer, RemoveToolTip, -5000
+		}
+	} else {
+		if (unfocusedPause) {
+			unfocusedPause := false
+			UseFlasks := true
+			;ToolTip, AutoFlasks, 0, 0
+			;SetTimer, RemoveToolTip, Off
+			if (longTimeout) {
+				ToolTip, AutoFlasks L, 0, 0
+				SetTimer, RemoveToolTip, Off
+			} else {
+				ToolTip, AutoFlasks, 0, 0
+				SetTimer, RemoveToolTip, Off
+			}
+		}
+	}
+	
 	if (UseFlasks) {
 		; have we attacked in the last 0.5 seconds?
 		if ((A_TickCount - LastRightClick) < attacktimeout_life) {
@@ -233,22 +274,33 @@ Loop {
 		}
 		if ((A_TickCount - LastRightClick) < attacktimeout) {
 			Gosub, CycleBuffFlasksWhenReady
-			Gosub, CycleAllSpellsWhenReady
+			if (not walkspam){ ; if spamming while walking do it on left click instead
+				Gosub, CycleAllSpellsWhenReady
+			}
 		} else {
 			; We haven't attacked recently, but are we channeling/continuous?
 			if (HoldRightClick) {
 				Gosub, CycleBuffFlasksWhenReady
-				Gosub, CycleAllSpellsWhenReady
+				if (not walkspam){ ; if spamming while walking do it on left click instead
+					Gosub, CycleAllSpellsWhenReady
+				}
 			}
 		}
 		if ((A_TickCount - LastLeftClick) < qstimeout) {
 			Gosub, CycleQSFlasksWhenReady
+			if (walkspam){ ; if spamming while walking do it on left click instead
+				Gosub, CycleAllSpellsWhenReady
+			}
 		} else {
 			if (HoldLeftClick) {
 				Gosub, CycleQSFlasksWhenReady
+				if (walkspam){
+					Gosub, CycleAllSpellsWhenReady
+				}
 			}
 		}
 	}
+	sleep, 75
 }
 
 ; 'Enter' in virtualkeyboard code/scancode for using apps like poe trades companion and such(doesn't actually work yet)
@@ -262,97 +314,100 @@ Loop {
 ;~!Enter::
 ;~+Enter::
 ;~Enter::
-~VK0x2D::	;insert
+;~VK0x2D::	;insert
 	; do nothing if its disabled/paused 
-	if (UseFlasks && (default_chatkey = false)) {
-		chatPause := true
-		UseFlasks := false
-		if UseFlasks {
-			; initialize start of auto-flask use
-			ToolTip, AutoFlasks, 0, 0
-			SetTimer, RemoveToolTip, Off
-
-			; reset usage timers for all flasks
-			LifeFlasks := 0
-			BuffFlasks := 0
-			QSFlasks := 0
-			for i in FlaskDurationInit {
-				FlaskLastUsed[i] := 0
-				FlaskDuration[i] := FlaskDurationInit[i]
-				LifeFlasks += 1
-			}
-			for i in SpellDurationInit {
-				SpellLastUsed[i] := 0
-				SpellDuration[i] := SpellDurationInit[i]
-			}
-			for i in FlaskDurationBuffInit {
-				FlaskLastUsedBuff[i] := 0
-				FlaskDurationBuff[i] := FlaskDurationBuffInit[i]
-				BuffFlasks += 1
-			}
-			for i in FlaskDurationQSInit {
-				FlaskLastUsedQS[i] := 0
-				FlaskDurationQS[i] := FlaskDurationQSInit[i]
-				QSFlasks += 1
-			}
-		} else {
-			if (longTimeout) {
-				attacktimeout := attacktimeout_backup
-				longTimeout := false
-			}
-			ToolTip, AutoFlasks Off, 0, 0
-			SetTimer, RemoveToolTip, -5000
-		}
-	}
-	return
+/* 	if (UseFlasks && (default_chatkey = false)) {
+ * 		chatPause := true
+ * 		UseFlasks := false
+ * 		if UseFlasks {
+ * 			; initialize start of auto-flask use
+ * 			ToolTip, AutoFlasks, 0, 0
+ * 			SetTimer, RemoveToolTip, Off
+ * 
+ * 			; reset usage timers for all flasks
+ * 			LifeFlasks := 0
+ * 			BuffFlasks := 0
+ * 			QSFlasks := 0
+ * 			for i in FlaskDurationInit {
+ * 				FlaskLastUsed[i] := 0
+ * 				FlaskDuration[i] := FlaskDurationInit[i]
+ * 				LifeFlasks += 1
+ * 			}
+ * 			for i in SpellDurationInit {
+ * 				SpellLastUsed[i] := 0
+ * 				SpellDuration[i] := SpellDurationInit[i]
+ * 			}
+ * 			for i in FlaskDurationBuffInit {
+ * 				FlaskLastUsedBuff[i] := 0
+ * 				FlaskDurationBuff[i] := FlaskDurationBuffInit[i]
+ * 				BuffFlasks += 1
+ * 			}
+ * 			for i in FlaskDurationQSInit {
+ * 				FlaskLastUsedQS[i] := 0
+ * 				FlaskDurationQS[i] := FlaskDurationQSInit[i]
+ * 				QSFlasks += 1
+ * 			}
+ * 		} else {
+ * 			if (longTimeout) {
+ * 				attacktimeout := attacktimeout_backup
+ * 				longTimeout := false
+ * 			}
+ * 			ToolTip, AutoFlasks Off, 0, 0
+ * 			SetTimer, RemoveToolTip, -5000
+ * 		}
+ * 	}
+ * 	return
+ */
 	
 ~Enter::
+	gosub, StopBot_noinput
 	; do nothing if its disabled/paused 
-	if ((UseFlasks && default_chatkey=true) | chatPause) {
-		if (default_chatkey = true) {
-			chatPause := not chatPause
-			UseFlasks := not UseFlasks
-		} else {
-			chatPause := false
-			UseFlasks := true
-		}
-		if UseFlasks {
-			; initialize start of auto-flask use
-			ToolTip, AutoFlasks, 0, 0
-			SetTimer, RemoveToolTip, Off
-
-			; reset usage timers for all flasks
-			LifeFlasks := 0
-			BuffFlasks := 0
-			QSFlasks := 0
-			for i in FlaskDurationInit {
-				FlaskLastUsed[i] := 0
-				FlaskDuration[i] := FlaskDurationInit[i]
-				LifeFlasks += 1
-			}
-			for i in SpellDurationInit {
-				SpellLastUsed[i] := 0
-				SpellDuration[i] := SpellDurationInit[i]
-			}
-			for i in FlaskDurationBuffInit {
-				FlaskLastUsedBuff[i] := 0
-				FlaskDurationBuff[i] := FlaskDurationBuffInit[i]
-				BuffFlasks += 1
-			}
-			for i in FlaskDurationQSInit {
-				FlaskLastUsedQS[i] := 0
-				FlaskDurationQS[i] := FlaskDurationQSInit[i]
-				QSFlasks += 1
-			}
-		} else {
-			if (longTimeout) {
-				attacktimeout := attacktimeout_backup
-				longTimeout := false
-			}
-			ToolTip, AutoFlasks Off, 0, 0
-			SetTimer, RemoveToolTip, -5000
-		}
-	}
+/* 	if ((UseFlasks && default_chatkey=true) | chatPause) {
+ * 		if (default_chatkey = true) {
+ * 			chatPause := not chatPause
+ * 			UseFlasks := not UseFlasks
+ * 		} else {
+ * 			chatPause := false
+ * 			UseFlasks := true
+ * 		}
+ * 		if UseFlasks {
+ * 			; initialize start of auto-flask use
+ * 			ToolTip, AutoFlasks, 0, 0
+ * 			SetTimer, RemoveToolTip, Off
+ * 
+ * 			; reset usage timers for all flasks
+ * 			LifeFlasks := 0
+ * 			BuffFlasks := 0
+ * 			QSFlasks := 0
+ * 			for i in FlaskDurationInit {
+ * 				FlaskLastUsed[i] := 0
+ * 				FlaskDuration[i] := FlaskDurationInit[i]
+ * 				LifeFlasks += 1
+ * 			}
+ * 			for i in SpellDurationInit {
+ * 				SpellLastUsed[i] := 0
+ * 				SpellDuration[i] := SpellDurationInit[i]
+ * 			}
+ * 			for i in FlaskDurationBuffInit {
+ * 				FlaskLastUsedBuff[i] := 0
+ * 				FlaskDurationBuff[i] := FlaskDurationBuffInit[i]
+ * 				BuffFlasks += 1
+ * 			}
+ * 			for i in FlaskDurationQSInit {
+ * 				FlaskLastUsedQS[i] := 0
+ * 				FlaskDurationQS[i] := FlaskDurationQSInit[i]
+ * 				QSFlasks += 1
+ * 			}
+ * 		} else {
+ * 			if (longTimeout) {
+ * 				attacktimeout := attacktimeout_backup
+ * 				longTimeout := false
+ * 			}
+ * 			ToolTip, AutoFlasks Off, 0, 0
+ * 			SetTimer, RemoveToolTip, -5000
+ * 		}
+ * 	}
+ */
 	return
 
 XButton1::
@@ -400,6 +455,28 @@ z::
 		SetTimer, RemoveToolTip, -5000
 	}
 	return
+	
+XButton2::
+~<::
+	if (attacktimeout_backup == -1) {
+		attacktimeout_backup := attacktimeout
+	}
+	if (attacktimeout_life_backup == -1) {
+		attacktimeout_life_backup := attacktimeout_life
+	}
+	if UseFlasks {
+		longTimeout := not longTimeout
+		if (longTimeout) {
+			attacktimeout := attacktimeout_long
+			attacktimeout_life := attacktimeout_long
+			ToolTip, AutoFlasks L, 0, 0
+		} else {
+			attacktimeout := attacktimeout_backup
+			attacktimeout_life := attacktimeout_life_backup
+			ToolTip, AutoFlasks, 0, 0
+		}
+	}
+	return
 
 ; A little tweak for my preference
 RemoveToolTip:
@@ -411,25 +488,31 @@ RemoveToolTip:
 	BlockInput Off
 	ExitApp
 	
-~LAlt::
-~LWin::
-~LShift::
-;~LControl::
-	StopBot_noinput()
+ ;~LAlt::
+ ;~LWin::
+ $~LShift::
+ $~LControl::
+  	;StopBot_noinput()
+  	gosub, StopBot_noinput
 	return
+ 
 
 ~F5::
-	StopBot()
+	;StopBot()
+	gosub, StopBot
 	return
 
 ~F12::
-	MouseMove, 0, 1079, 0
+	;MouseMove, 0, 1079, 0
+	MouseMove, 5, 5, 0
 	Send {Ctrl up}	;failsafe for when using the script mid combat when we are holding buttons and such(we could grab the equipment otherwise)
 	Send {Alt up}
-	StopBot()
+	;StopBot()
+	gosub, StopBot
 	return
 	
-StopBot(){
+;StopBot(){
+StopBot:
 		BlockInput MouseMoveOff	;disable block mouse input in case it gets stuck somehow(failsafe, not necessary at all)
 		BlockInput Off
 		Send {LButton up}	;failsafe for when using the script mid combat when we are holding buttons and such(we could grab the equipment otherwise)
@@ -452,9 +535,11 @@ StopBot(){
 				longTimeout := false
 			}
 		}
-	}
+	;}
+	return
 
-StopBot_noinput(){
+;StopBot_noinput(){
+StopBot_noinput:
 		global UseFlasks
 		global longTimeout
 		global attacktimeout
@@ -471,7 +556,8 @@ StopBot_noinput(){
 				longTimeout := false
 			}
 		}
-	}
+	;}
+	return
 
 ;----------------------------------------------------------------------
 ; To use a different moust button (default is right click), change the
@@ -484,9 +570,9 @@ StopBot_noinput(){
 ; 2nd is release of button}
 ;----------------------------------------------------------------------
 ~RButton::
-	if (UseFlasks && RightClickSkill) {
-		Send e
-	}
+	;~ if (UseFlasks && RightClickSkill) {
+		;~ Send r
+	;~ }
 	; pass-thru and capture when the last attack (Right click) was done
 	; we also track if the mouse button is being held down for continuous attack(s) and/or channelling skills
 	HoldRightClick := true
@@ -510,35 +596,72 @@ StopBot_noinput(){
 	HoldLeftClick := false
 	return
 	
-~Shift::
-	; trigger 2 spells with middle mouse button
-	if (UseFlasks && (ShiftTrigger1 <> 0)) {
-		Send %ShiftTrigger1%
-		if (ShiftTrigger2 <> 0){
-			Send %ShiftTrigger2%
-		}
-	}
-	return
-	
-~WheelUp::
-	; trigger 2 spells with middle mouse button
-	if (UseFlasks && (WUButtonTrigger1 <> 0)) {
-		Send %WUButtonTrigger1%
-		if (WUButtonTrigger2 <> 0){
-			Send %WUButtonTrigger2%
-		}
-	}
-	return
-	
-~WheelDown::
-	; trigger 2 spells with middle mouse button
-	if (UseFlasks && (WDButtonTrigger1 <> 0)) {
-		Send %WDButtonTrigger1%
-		if (WDButtonTrigger2 <> 0){
-			Send %WDButtonTrigger2%
-		}
-	}
-	return
+ ;~ ~Shift::
+;~ ; trigger 2 spells with middle mouse button
+	;~ if (UseFlasks && (ShiftTrigger1 <> 0)) {
+  		;~ Send %ShiftTrigger1%
+  		;~ if (ShiftTrigger2 <> 0){
+  			;~ Send %ShiftTrigger2%
+  		;~ }
+  	;~ }
+  	;~ return
+  	
+ ;~ ~WheelUp::
+	;~ ; trigger 2 spells with middle mouse button
+	;~ if (UseFlasks && (WUButtonTrigger1 <> 0)) {
+ 		;~ Send %WUButtonTrigger1%
+ 		;~ if (WUButtonTrigger2 <> 0){
+ 			;~ Send %WUButtonTrigger2%
+ 		;~ }
+ 	;~ }
+	;~ if (UseFlasks) {
+		;~ Send w
+	;~ }
+ 	;~ return
+ 	
+ ;~ ~WheelDown::
+ 	;~ ; trigger 2 spells with middle mouse button
+ 	;~ if (UseFlasks && (WDButtonTrigger1 <> 0)) {
+ 		;~ Send %WDButtonTrigger1%
+ 		;~ if (WDButtonTrigger2 <> 0){
+ 			;~ Send %WDButtonTrigger2%
+ 		;~ }
+ 	;~ }
+	;~ if (UseFlasks) {
+		;~ MouseClick, Left
+		;~ Random, VariableDelay, -99, 99
+		;~ Sleep, %VariableDelay%
+		;~ MouseClick, Right
+		;~ Random, VariableDelay, -99, 99
+		;~ Sleep, %VariableDelay%
+		;~ MouseClick, Left
+		;~ Random, VariableDelay, -99, 99
+		;~ Sleep, %VariableDelay%
+	;~ }
+ 	;~ return
+ 
+;~ ~WheelDown::
+	;~ if (UseFlasks) {
+		;~ SetTimer, HoldClick, -1 ;-1 to run once
+	;~ }
+	;~ return
+
+HoldClick:
+    kDown := A_TickCount
+    While ((A_TickCount - kDown) < 100)
+    {
+        SendInput, {LButton down}
+        Random, VariableDelay, -50, 50
+		Sleep, %VariableDelay%
+		MouseClick, Right
+		Random, VariableDelay, -50, 50
+		Sleep, %VariableDelay%
+		SendInput, {LButton up}
+        Random, VariableDelay, -50, 50
+		Sleep, %VariableDelay%
+    }
+	SendInput, {LButton up}
+Return
 
 ;~ ; Dynamically set the hotkey to de-assign the 1st button triggered when pressing the defensives
 ;~ Hotkey, %osb%, Attack_timeout_toggle
@@ -559,28 +682,6 @@ StopBot_noinput(){
 		;~ }
 	;~ }
 	;~ return
-
-XButton2::
-~<::
-	if (attacktimeout_backup == -1) {
-		attacktimeout_backup := attacktimeout
-	}
-	if (attacktimeout_life_backup == -1) {
-		attacktimeout_life_backup := attacktimeout_life
-	}
-	if UseFlasks {
-		longTimeout := not longTimeout
-		if (longTimeout) {
-			attacktimeout := attacktimeout_long
-			attacktimeout_life := attacktimeout_long
-			ToolTip, AutoFlasks/%attacktimeout%, 0, 0
-		} else {
-			attacktimeout := attacktimeout_backup
-			attacktimeout_life := attacktimeout_life_backup
-			ToolTip, AutoFlasks/%attacktimeout%, 0, 0
-		}
-	}
-	return
 	
 ;~ ~W::
 	;~ if(UseFlasks && osb <> 0) {
@@ -592,7 +693,7 @@ XButton2::
 	;~ return
 	
 +f::
-	if UseFlasks {
+	if True {
 		; disconnect hotkey
 		Run cports.exe /close * * * * PathOfExile_x64.exe
 	}
@@ -846,7 +947,8 @@ CycleBuffFlasksWhenReady:
 ; weapon slot is used for holding gems.
 ;----------------------------------------------------------------------
 !a::
-	StopBot()
+	;StopBot()
+	gosub, StopBot
 	if (not gemswap_hotkey) {
 	o_PrimX_2 := 0
 	o_PrimY_2 := 0
@@ -900,7 +1002,8 @@ CycleBuffFlasksWhenReady:
 	Return
 	
 ~+q::
-	StopBot()
+	;StopBot()
+	gosub, StopBot
 	if (gemswap_hotkey) {
 	o_PrimX_3 := 0
 	o_PrimY_3 := 0
@@ -953,7 +1056,8 @@ CycleBuffFlasksWhenReady:
 ;Portal Swap
 !s::
 	MouseMove, 0, 1079, 0
-	StopBot()
+	;StopBot()
+	gosub, StopBot
 	
 	o_PrimX := 0
 	o_PrimY := 0
@@ -1034,3 +1138,6 @@ CycleBuffFlasksWhenReady:
 	Sleep %VariableDelay%
 	MouseMove, x, y
 	Return
+
+
+#IfWinActive
