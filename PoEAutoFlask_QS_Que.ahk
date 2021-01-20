@@ -37,7 +37,7 @@ QSFlasks := 0
 ; Note: Delete the last line (["e"]), or set value to 0, if you don't use a buff skill
 ;----------------------------------------------------------------------
 ;--Life Flask list (currently spammable flasks and spells on cd)
-FlaskDurationInit[1] := 500	; karui life(2500)/Forbidden taste(4000)
+;FlaskDurationInit[1] := 500	; karui life(2500)/Forbidden taste(4000)
 ;FlaskDurationInit[2] := 4250		; 2ndkarui(2700)/life(4000)/basalt(4500)
 ;FlaskDurationInit[3] := 4800		; Rumi's armor(4800)
 ;FlaskDurationInit[4] := 8000		; divination(5000)/armor(4000x2 so they dont stack after 1st time)
@@ -46,11 +46,12 @@ FlaskDurationInit[1] := 500	; karui life(2500)/Forbidden taste(4000)
 ;--Spell list
 ;SpellDurationInit["e"] := 750		; Convocation(3000/3100)
 ;SpellDurationInit["q"] := 4100		; PhaseRun(4000)/Molten Shell(~8700)/MS+19%(~9500)
-SpellDurationInit["-"] := 2000		;steelskin/vaalMS
-;SpellDurationInit["t"] := 2000		;vaalHaste
+SpellDurationInit["-"] := 5000		;steelskin/vaalMS
+SpellDurationInit["t"] := 2000		;vaalHaste
 
 ;--Buff flask list(queued one after another)
-FlaskDurationBuffInit[2] := 5100 ;6500		; experimenter's granite(6400)/silver(6000)
+FlaskDurationBuffInit[1] := 1000
+FlaskDurationBuffInit[2] := 5000 ;6500		; experimenter's granite(6400)/silver(6000)
 FlaskDurationBuffInit[3] := 4900		; divination(5000)/armor(4000)/basalt(5400)/experimenter's(6200)
 FlaskDurationBuffInit[4] := 4900		; Rumi's armor(4800)/taste of hate(4800)
 
@@ -76,7 +77,7 @@ ShiftTrigger1 := 0
 ShiftTrigger2 := 0
 gemswap_hotkey := false	;enable/disable gem swapping except the portal swap
 default_chatkey := true
-RightClickSkill := true ;use skill on right click
+RightClickSkill := false ;use skill on right click
 
 ; variables to initialize
 FlaskDuration := []
@@ -410,7 +411,7 @@ Loop {
  */
 	return
 
-XButton1::
+;;XButton1::
 z::
 	BlockInput MouseMoveOff	;disable block mouse input in case it gets stuck somehow(failsafe, not necessary at all)
 	BlockInput Off
@@ -456,7 +457,7 @@ z::
 	}
 	return
 	
-XButton2::
+;;XButton2::
 ~<::
 	if (attacktimeout_backup == -1) {
 		attacktimeout_backup := attacktimeout
@@ -483,18 +484,18 @@ RemoveToolTip:
 	ToolTip
 	return
 	
-^F6::
+^F12::
 	BlockInput MouseMoveOff	;disable block mouse input in case it gets stuck somehow(failsafe, not necessary at all)
 	BlockInput Off
 	ExitApp
 	
  ;~LAlt::
  ;~LWin::
- $~LShift::
- $~LControl::
-  	;StopBot_noinput()
-  	gosub, StopBot_noinput
-	return
+ ;~ $~LShift::
+ ;~ $~LControl::
+  	;~ ;StopBot_noinput()
+  	;~ gosub, StopBot_noinput
+	;~ return
  
 
 ~F5::
@@ -569,16 +570,18 @@ StopBot_noinput:
 ; Make the change in both places, below (the first is click,
 ; 2nd is release of button}
 ;----------------------------------------------------------------------
+~w::
 ~RButton::
-	;~ if (UseFlasks && RightClickSkill) {
-		;~ Send r
-	;~ }
+	if (UseFlasks && RightClickSkill) {
+		Send t
+	}
 	; pass-thru and capture when the last attack (Right click) was done
 	; we also track if the mouse button is being held down for continuous attack(s) and/or channelling skills
 	HoldRightClick := true
 	LastRightClick := A_TickCount
 	return
 
+~w up::
 ~RButton up::
 	; pass-thru and release the right mouse button
 	HoldRightClick := false
