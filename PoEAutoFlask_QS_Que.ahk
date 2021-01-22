@@ -47,7 +47,7 @@ QSFlasks := 0
 ;SpellDurationInit["e"] := 750		; Convocation(3000/3100)
 ;SpellDurationInit["q"] := 4100		; PhaseRun(4000)/Molten Shell(~8700)/MS+19%(~9500)
 SpellDurationInit["-"] := 5000		;steelskin/vaalMS
-SpellDurationInit["t"] := 2000		;vaalHaste
+;SpellDurationInit["t"] := 2000		;vaalHaste
 
 ;--Buff flask list(queued one after another)
 FlaskDurationBuffInit[1] := 1000
@@ -77,7 +77,7 @@ ShiftTrigger1 := 0
 ShiftTrigger2 := 0
 gemswap_hotkey := false	;enable/disable gem swapping except the portal swap
 default_chatkey := true
-RightClickSkill := false ;use skill on right click
+RightClickSkill := true ;use skill on right click
 
 ; variables to initialize
 FlaskDuration := []
