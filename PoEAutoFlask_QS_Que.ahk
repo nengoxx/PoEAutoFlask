@@ -46,14 +46,15 @@ QSFlasks := 0
 ;--Spell list
 ;SpellDurationInit["e"] := 750		; Convocation(3000/3100)
 ;SpellDurationInit["q"] := 4100		; PhaseRun(4000)/Molten Shell(~8700)/MS+19%(~9500)
-SpellDurationInit["-"] := 5000		;steelskin/vaalMS
+;SpellDurationInit["-"] := 3000		;steelskin/vaalMS
 ;SpellDurationInit["t"] := 2000		;vaalHaste
 
 ;--Buff flask list(queued one after another)
-FlaskDurationBuffInit[1] := 1000
-FlaskDurationBuffInit[2] := 5000 ;6500		; experimenter's granite(6400)/silver(6000)
+FlaskDurationBuffInit[1] := 4000
+FlaskDurationBuffInit[2] := 4900 ;6500		; experimenter's granite(6400)/silver(6000)
 FlaskDurationBuffInit[3] := 4900		; divination(5000)/armor(4000)/basalt(5400)/experimenter's(6200)
 FlaskDurationBuffInit[4] := 4900		; Rumi's armor(4800)/taste of hate(4800)
+;FlaskDurationBuffInit[5] := 4900
 
 ;--QuickSilver flask list
 ;FlaskDurationQSInit[4] := 4000	; QS1(4800)
@@ -105,7 +106,8 @@ LastRightClick := 0
 LastLeftClick := 0
 longTimeout := false	; toggle attacktimeout ingame
 attacktimeout_backup := -1
-attacktimeout_life_backup == -1
+attacktimeout_life_backup := -1
+useAllFlasks := false ; use all flasks when pressing d even if the bot is off(for bossing)
 
 walkspam := false ;spam while walking(like qs)
 
@@ -234,10 +236,10 @@ Loop {
 		if (UseFlasks) {
 			unfocusedPause := true
 			UseFlasks := false
-			;if (longTimeout) {
-			;	attacktimeout := attacktimeout_backup
-			;	longTimeout := false
-			;}
+			if (longTimeout) {
+				attacktimeout := attacktimeout_backup
+				longTimeout := false
+			}
 			ToolTip, AutoFlasks Off, 0, 0
 			SetTimer, RemoveToolTip, -5000
 		}
@@ -412,13 +414,16 @@ Loop {
 	return
 
 ;;XButton1::
-z::
++z::
 	BlockInput MouseMoveOff	;disable block mouse input in case it gets stuck somehow(failsafe, not necessary at all)
 	BlockInput Off
 	tabbing := false
 	
 	UseFlasks := not UseFlasks
 	if UseFlasks {
+		useAllFlasks := false ;stop using all at the same time
+		attacktimeout_life_backup := -1
+		attacktimeout_backup := -1
 		; initialize start of auto-flask use
 		ToolTip, AutoFlasks, 0, 0
 		SetTimer, RemoveToolTip, Off
@@ -466,7 +471,6 @@ z::
 		attacktimeout_life_backup := attacktimeout_life
 	}
 	if UseFlasks {
-		longTimeout := not longTimeout
 		if (longTimeout) {
 			attacktimeout := attacktimeout_long
 			attacktimeout_life := attacktimeout_long
@@ -474,8 +478,20 @@ z::
 		} else {
 			attacktimeout := attacktimeout_backup
 			attacktimeout_life := attacktimeout_life_backup
+			attacktimeout_life_backup := -1
+			attacktimeout_backup := -1
 			ToolTip, AutoFlasks, 0, 0
 		}
+		longTimeout := not longTimeout
+	}
+	return
+	
+~+d::
+	if UseFlasks {
+		useAllFlasks := true
+		gosub, StopBot
+		ToolTip, Bossing, 0, 0
+		SetTimer, RemoveToolTip, Off
 	}
 	return
 
@@ -528,8 +544,8 @@ StopBot:
 		global attacktimeout_life_backup
 		if (UseFlasks) {
 			UseFlasks := false
-			ToolTip, AutoFlasks Off, 0, 0
-			SetTimer, RemoveToolTip, -5000
+			ToolTip, OFF, 0, 0
+			;SetTimer, RemoveToolTip, -5000
 			if (longTimeout) {
 				attacktimeout := attacktimeout_backup
 				attacktimeout_life := attacktimeout_life_backup
@@ -549,8 +565,8 @@ StopBot_noinput:
 		global attacktimeout_life_backup
 		if (UseFlasks) {
 			UseFlasks := false
-			ToolTip, AutoFlasks Off, 0, 0
-			SetTimer, RemoveToolTip, -5000
+			ToolTip, OFF, 0, 0
+			;SetTimer, RemoveToolTip, -5000
 			if (longTimeout) {
 				attacktimeout := attacktimeout_backup
 				attacktimeout_life := attacktimeout_life_backup
@@ -570,9 +586,12 @@ StopBot_noinput:
 ; Make the change in both places, below (the first is click,
 ; 2nd is release of button}
 ;----------------------------------------------------------------------
+~XButton2::
 ~w::
 ~RButton::
-	if (UseFlasks && RightClickSkill) {
+	if ((UseFlasks or useAllFlasks) && RightClickSkill) {
+		Random, VariableDelay, -50, 50
+		Sleep, %VariableDelay%
 		Send t
 	}
 	; pass-thru and capture when the last attack (Right click) was done
@@ -581,6 +600,7 @@ StopBot_noinput:
 	LastRightClick := A_TickCount
 	return
 
+~XButton2 up::
 ~w up::
 ~RButton up::
 	; pass-thru and release the right mouse button
@@ -598,6 +618,12 @@ StopBot_noinput:
 	; pass-thru and release the right mouse button
 	HoldLeftClick := false
 	return
+	
+;~ XButton2:: ;mouse 5
+;~ XButton1:: ;mouse4
+	;~ if (UseFlasks or useAllFlasks) {
+		;~ Send t
+	;~ }
 	
  ;~ ~Shift::
 ;~ ; trigger 2 spells with middle mouse button
@@ -761,8 +787,8 @@ Return
 ; Use all flasks, now.  A variable delay is included between flasks
 ; NOTE: this will use all flasks, even those with a FlaskDurationInit of 0
 ;----------------------------------------------------------------------
-`::
-	if UseFlasks {
+~d::
+	if useAllFlasks{
 		Send 1
 		Random, VariableDelay, -99, 99
 		Sleep, %VariableDelay%
@@ -776,12 +802,12 @@ Return
 		Random, VariableDelay, -99, 99
 		Sleep, %VariableDelay%
 		Send 5
-		Random, VariableDelay, -99, 99
-		Sleep, %VariableDelay%
-		Send e
-		Random, VariableDelay, -99, 99
-		Sleep, %VariableDelay%
-		Send r
+		;Random, VariableDelay, -99, 99
+		;Sleep, %VariableDelay%
+		;Send e
+		;Random, VariableDelay, -99, 99
+		;Sleep, %VariableDelay%
+		;Send r
 	}
 	return
 
