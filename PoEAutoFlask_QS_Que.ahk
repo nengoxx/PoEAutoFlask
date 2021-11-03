@@ -46,19 +46,20 @@ QSFlasks := 0
 ;--Spell list
 ;SpellDurationInit["e"] := 750		; Convocation(3000/3100)
 ;SpellDurationInit["q"] := 4100		; PhaseRun(4000)/Molten Shell(~8700)/MS+19%(~9500)
-;SpellDurationInit["-"] := 3000		;steelskin/vaalMS
-;SpellDurationInit["t"] := 2000		;vaalHaste
+SpellDurationInit[0] := 1000		;steelskin/vaalMS
+;SpellDurationInit["t"] := 1000		;vaalHaste
+
 
 ;--Buff flask list(queued one after another)
-FlaskDurationBuffInit[1] := 4000
-FlaskDurationBuffInit[2] := 4900 ;6500		; experimenter's granite(6400)/silver(6000)
-FlaskDurationBuffInit[3] := 4900		; divination(5000)/armor(4000)/basalt(5400)/experimenter's(6200)
-FlaskDurationBuffInit[4] := 4900		; Rumi's armor(4800)/taste of hate(4800)
+FlaskDurationBuffInit["s"] := 5100
+FlaskDurationBuffInit[2] := 6100 ;6500		; experimenter's granite(6400)/silver(6000)
+FlaskDurationBuffInit[3] := 6100		; divination(5000)/armor(4000)/basalt(5400)/experimenter's(6200)
+FlaskDurationBuffInit[4] := 6100		; Rumi's armor(4800)/taste of hate(4800)
 ;FlaskDurationBuffInit[5] := 4900
 
 ;--QuickSilver flask list
 ;FlaskDurationQSInit[4] := 4000	; QS1(4800)
-FlaskDurationQSInit[5] := 4900	; QS2(6100)/Rotgut(6000)
+FlaskDurationQSInit[5] := 6100	; QS2(6100)/Rotgut(6000)
 
 queueLife := 0				; set to 0 to spam the flasks instead
 queueBuff := 0				; set to 0 to spam the flasks instead
@@ -109,7 +110,7 @@ attacktimeout_backup := -1
 attacktimeout_life_backup := -1
 useAllFlasks := false ; use all flasks when pressing d even if the bot is off(for bossing)
 
-walkspam := false ;spam while walking(like qs)
+walkspam := true ;spam while walking(like qs)
 
 chatPause := false
 unfocusedPause := false
@@ -277,16 +278,16 @@ Loop {
 		}
 		if ((A_TickCount - LastRightClick) < attacktimeout) {
 			Gosub, CycleBuffFlasksWhenReady
-			if (not walkspam){ ; if spamming while walking do it on left click instead
+			;if (not walkspam){ ; if spamming while walking do it on left click instead
 				Gosub, CycleAllSpellsWhenReady
-			}
+			;}
 		} else {
 			; We haven't attacked recently, but are we channeling/continuous?
 			if (HoldRightClick) {
 				Gosub, CycleBuffFlasksWhenReady
-				if (not walkspam){ ; if spamming while walking do it on left click instead
+				;if (not walkspam){ ; if spamming while walking do it on left click instead
 					Gosub, CycleAllSpellsWhenReady
-				}
+				;}
 			}
 		}
 		if ((A_TickCount - LastLeftClick) < qstimeout) {
@@ -586,6 +587,7 @@ StopBot_noinput:
 ; Make the change in both places, below (the first is click,
 ; 2nd is release of button}
 ;----------------------------------------------------------------------
+~XButton1::
 ~XButton2::
 ~w::
 ~RButton::
@@ -600,6 +602,7 @@ StopBot_noinput:
 	LastRightClick := A_TickCount
 	return
 
+~XButton1 up::
 ~XButton2 up::
 ~w up::
 ~RButton up::
@@ -724,7 +727,7 @@ Return
 +f::
 	if True {
 		; disconnect hotkey
-		Run cports.exe /close * * * * PathOfExile_x64.exe
+		Run cports.exe /close * * * * PathOfExile.exe
 	}
 	return
 
