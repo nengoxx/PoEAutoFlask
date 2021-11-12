@@ -51,15 +51,15 @@ SpellDurationInit[0] := 1000		;steelskin/vaalMS
 
 
 ;--Buff flask list(queued one after another)
-FlaskDurationBuffInit["s"] := 5100
-FlaskDurationBuffInit[2] := 6100 ;6500		; experimenter's granite(6400)/silver(6000)
-FlaskDurationBuffInit[3] := 6100		; divination(5000)/armor(4000)/basalt(5400)/experimenter's(6200)
-FlaskDurationBuffInit[4] := 6100		; Rumi's armor(4800)/taste of hate(4800)
+FlaskDurationBuffInit["s"] := 2000
+;FlaskDurationBuffInit[2] := 6100 ;6500		; experimenter's granite(6400)/silver(6000)
+;FlaskDurationBuffInit[3] := 6100		; divination(5000)/armor(4000)/basalt(5400)/experimenter's(6200)
+;FlaskDurationBuffInit[4] := 6100		; Rumi's armor(4800)/taste of hate(4800)
 ;FlaskDurationBuffInit[5] := 4900
 
 ;--QuickSilver flask list
 ;FlaskDurationQSInit[4] := 4000	; QS1(4800)
-FlaskDurationQSInit[5] := 6100	; QS2(6100)/Rotgut(6000)
+;FlaskDurationQSInit[5] := 6100	; QS2(6100)/Rotgut(6000)
 
 queueLife := 0				; set to 0 to spam the flasks instead
 queueBuff := 0				; set to 0 to spam the flasks instead
