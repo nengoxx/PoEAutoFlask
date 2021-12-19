@@ -27,6 +27,7 @@ FlaskDurationQSInit := []
 LifeFlasks := 0
 BuffFlasks := 0
 QSFlasks := 0
+MarchOfTheLegion :=[6,7,8,9] ;auras socketed in march of the legion boots
 ;----------------------------------------------------------------------
 ; Set the duration of each flask, in ms, below.  For example, if the
 ; flask in slot 3 has a duration of "Lasts 4.80 Seconds", then use:
@@ -46,20 +47,21 @@ QSFlasks := 0
 ;--Spell list
 ;SpellDurationInit["e"] := 750		; Convocation(3000/3100)
 ;SpellDurationInit["q"] := 4100		; PhaseRun(4000)/Molten Shell(~8700)/MS+19%(~9500)
-SpellDurationInit[0] := 1000		;steelskin/vaalMS
+;SpellDurationInit[9] := 1000		;steelskin/vaalMS
 ;SpellDurationInit["t"] := 1000		;vaalHaste
 
 
 ;--Buff flask list(queued one after another)
-FlaskDurationBuffInit["s"] := 2000
-;FlaskDurationBuffInit[2] := 6100 ;6500		; experimenter's granite(6400)/silver(6000)
-;FlaskDurationBuffInit[3] := 6100		; divination(5000)/armor(4000)/basalt(5400)/experimenter's(6200)
-;FlaskDurationBuffInit[4] := 6100		; Rumi's armor(4800)/taste of hate(4800)
+;FlaskDurationBuffInit["s"] := 4000
+;FlaskDurationBuffInit[2] := 7200 ;6500		; experimenter's granite(6400)/silver(6000)
+;FlaskDurationBuffInit[3] := 7200		; divination(5000)/armor(4000)/basalt(5400)/experimenter's(6200)
+;FlaskDurationBuffInit[4] := 7200		; Rumi's armor(4800)/taste of hate(4800)
 ;FlaskDurationBuffInit[5] := 4900
 
 ;--QuickSilver flask list
 ;FlaskDurationQSInit[4] := 4000	; QS1(4800)
-;FlaskDurationQSInit[5] := 6100	; QS2(6100)/Rotgut(6000)
+;FlaskDurationQSInit[5] := 10200	; QS2(6100)/Rotgut(6000)
+
 
 queueLife := 0				; set to 0 to spam the flasks instead
 queueBuff := 0				; set to 0 to spam the flasks instead
@@ -80,6 +82,10 @@ ShiftTrigger2 := 0
 gemswap_hotkey := false	;enable/disable gem swapping except the portal swap
 default_chatkey := true
 RightClickSkill := true ;use skill on right click
+useMarchOfTHeLegion := false ;cycle thru every time you click an instant spell(right click)
+MarchOfTheLegion_leftClick := false
+MarchTimeout := 3000
+LastMarchCast := 0
 
 ; variables to initialize
 FlaskDuration := []
@@ -99,6 +105,8 @@ FlaskLastUsedQS := []
 lastLifeFlaskUsed := 0		;life
 lastBuffFlaskUsed := 0		;buff
 lastQSFlaskUsed := 0		;qs
+
+lastMarchOfTheLegionIndex := 0
 
 UseFlasks := false
 HoldRightClick := false
@@ -302,6 +310,10 @@ Loop {
 					Gosub, CycleAllSpellsWhenReady
 				}
 			}
+		}
+		if (MarchOfTheLegion_leftClick && ((A_TickCount - LastMarchCast) > MarchTimeout)) {
+				Gosub, CycleMarchOfTHeLegion
+		
 		}
 	}
 	sleep, 75
@@ -596,6 +608,9 @@ StopBot_noinput:
 		Sleep, %VariableDelay%
 		Send t
 	}
+	if(not MarchOfTheLegion_leftClick){
+		Gosub, CycleMarchOfTHeLegion
+	}
 	; pass-thru and capture when the last attack (Right click) was done
 	; we also track if the mouse button is being held down for continuous attack(s) and/or channelling skills
 	HoldRightClick := true
@@ -877,6 +892,20 @@ CycleBuffFlasksWhenReady:
 				sleep, %VariableDelay%
 			}
 		}
+	}
+	return
+
+CycleMarchOfTHeLegion:
+	if(useMarchOfTHeLegion){
+		if(MarchOfTheLegion.MaxIndex() < lastMarchOfTheLegionIndex){
+			lastMarchOfTheLegionIndex := 1
+		}
+		Random, VariableDelay, -50, 50
+		Sleep, %VariableDelay%
+		key := MarchOfTHeLegion[lastMarchOfTheLegionIndex]
+		Send %key%
+		LastMarchCast := A_TickCount
+		lastMarchOfTheLegionIndex := lastMarchOfTheLegionIndex + 1
 	}
 	return
 
