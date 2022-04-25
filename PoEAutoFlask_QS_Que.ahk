@@ -52,15 +52,15 @@ MarchOfTheLegion :=[6,7,8,9] ;auras socketed in march of the legion boots
 
 
 ;--Buff flask list(queued one after another)
-;FlaskDurationBuffInit["s"] := 4000
-;FlaskDurationBuffInit[2] := 7200 ;6500		; experimenter's granite(6400)/silver(6000)
-;FlaskDurationBuffInit[3] := 7200		; divination(5000)/armor(4000)/basalt(5400)/experimenter's(6200)
-;FlaskDurationBuffInit[4] := 7200		; Rumi's armor(4800)/taste of hate(4800)
+;FlaskDurationBuffInit["s"] := 5100
+;FlaskDurationBuffInit[2] := 7000 ;6500		; experimenter's granite(6400)/silver(6000)
+;FlaskDurationBuffInit[3] := 7000		; divination(5000)/armor(4000)/basalt(5400)/experimenter's(6200)
+;FlaskDurationBuffInit[4] := 7000		; Rumi's armor(4800)/taste of hate(4800)
 ;FlaskDurationBuffInit[5] := 4900
 
 ;--QuickSilver flask list
 ;FlaskDurationQSInit[4] := 4000	; QS1(4800)
-;FlaskDurationQSInit[5] := 10200	; QS2(6100)/Rotgut(6000)
+;FlaskDurationQSInit[5] := 6000	; QS2(6100)/Rotgut(6000)
 
 
 queueLife := 0				; set to 0 to spam the flasks instead
@@ -82,6 +82,7 @@ ShiftTrigger2 := 0
 gemswap_hotkey := false	;enable/disable gem swapping except the portal swap
 default_chatkey := true
 RightClickSkill := true ;use skill on right click
+2RightClickSkill := true ;use 2 skills on right click
 useMarchOfTHeLegion := false ;cycle thru every time you click an instant spell(right click)
 MarchOfTheLegion_leftClick := false
 MarchTimeout := 3000
@@ -376,6 +377,7 @@ Loop {
  */
 	
 ~Enter::
+;~Ctrl::
 	gosub, StopBot_noinput
 	; do nothing if its disabled/paused 
 /* 	if ((UseFlasks && default_chatkey=true) | chatPause) {
@@ -427,6 +429,7 @@ Loop {
 	return
 
 ;;XButton1::
+CapsLock::
 +z::
 	BlockInput MouseMoveOff	;disable block mouse input in case it gets stuck somehow(failsafe, not necessary at all)
 	BlockInput Off
@@ -602,11 +605,17 @@ StopBot_noinput:
 ~XButton1::
 ~XButton2::
 ~w::
+~e::
 ~RButton::
 	if ((UseFlasks or useAllFlasks) && RightClickSkill) {
 		Random, VariableDelay, -50, 50
 		Sleep, %VariableDelay%
 		Send t
+		if (2RightClickSkill) {
+			Random, VariableDelay, -50, 50
+			Sleep, %VariableDelay%
+			Send 9
+		}
 	}
 	if(not MarchOfTheLegion_leftClick){
 		Gosub, CycleMarchOfTHeLegion
@@ -1115,7 +1124,7 @@ CycleMarchOfTHeLegion:
 	Return
 
 ;Portal Swap
-!s::
++!s::
 	MouseMove, 0, 1079, 0
 	;StopBot()
 	gosub, StopBot
