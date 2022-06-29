@@ -45,21 +45,21 @@ MarchOfTheLegion :=[6,7,8,9] ;auras socketed in march of the legion boots
 ;FlaskDurationInit[5] := 4900		; QS(4800)
 
 ;--Spell list
-;SpellDurationInit["e"] := 750		; Convocation(3000/3100)
-;SpellDurationInit["q"] := 4100		; PhaseRun(4000)/Molten Shell(~8700)/MS+19%(~9500)
-;SpellDurationInit[9] := 1000		;steelskin/vaalMS
+SpellDurationInit["d"] := 10000		; Convocation(3000/3100)
+SpellDurationInit[8] := 2000		; PhaseRun(4000)/Molten Shell(~8700)/MS+19%(~9500)
+SpellDurationInit[9] := 1000		;steelskin/vaalMS
 ;SpellDurationInit["t"] := 1000		;vaalHaste
 
 
 ;--Buff flask list(queued one after another)
-;FlaskDurationBuffInit["s"] := 5100
-;FlaskDurationBuffInit[2] := 7000 ;6500		; experimenter's granite(6400)/silver(6000)
-;FlaskDurationBuffInit[3] := 7000		; divination(5000)/armor(4000)/basalt(5400)/experimenter's(6200)
-;FlaskDurationBuffInit[4] := 7000		; Rumi's armor(4800)/taste of hate(4800)
+;FlaskDurationBuffInit["s"] := 5000
+;FlaskDurationBuffInit[2] := 1500 ;6500		; experimenter's granite(6400)/silver(6000)
+;FlaskDurationBuffInit[3] := 7300		; divination(5000)/armor(4000)/basalt(5400)/experimenter's(6200)
+;FlaskDurationBuffInit[4] := 7300		; Rumi's armor(4800)/taste of hate(4800)
 ;FlaskDurationBuffInit[5] := 4900
 
 ;--QuickSilver flask list
-;FlaskDurationQSInit[4] := 4000	; QS1(4800)
+;FlaskDurationQSInit[4] := 7000	; QS1(4800)
 ;FlaskDurationQSInit[5] := 6000	; QS2(6100)/Rotgut(6000)
 
 
@@ -75,8 +75,8 @@ osb2 := "1"					; I used this for vaal skills, to change the default("w") hotkey
 ; spells to trigger when scrolling the mouse wheel or shift set to 0 to disable(default="f")
 WUButtonTrigger1 := 0
 WUButtonTrigger2 := 0	;"{MButton}"
-WDButtonTrigger1 := 0	
-WDButtonTrigger2 := 0	
+WDButtonTrigger1 := 0
+WDButtonTrigger2 := 0
 ShiftTrigger1 := 0
 ShiftTrigger2 := 0
 gemswap_hotkey := false	;enable/disable gem swapping except the portal swap
@@ -268,7 +268,7 @@ Loop {
 			}
 		}
 	}
-	
+
 	if (UseFlasks) {
 		; have we attacked in the last 0.5 seconds?
 		if ((A_TickCount - LastRightClick) < attacktimeout_life) {
@@ -314,7 +314,7 @@ Loop {
 		}
 		if (MarchOfTheLegion_leftClick && ((A_TickCount - LastMarchCast) > MarchTimeout)) {
 				Gosub, CycleMarchOfTHeLegion
-		
+
 		}
 	}
 	sleep, 75
@@ -332,7 +332,7 @@ Loop {
 ;~+Enter::
 ;~Enter::
 ;~VK0x2D::	;insert
-	; do nothing if its disabled/paused 
+	; do nothing if its disabled/paused
 /* 	if (UseFlasks && (default_chatkey = false)) {
  * 		chatPause := true
  * 		UseFlasks := false
@@ -340,7 +340,7 @@ Loop {
  * 			; initialize start of auto-flask use
  * 			ToolTip, AutoFlasks, 0, 0
  * 			SetTimer, RemoveToolTip, Off
- * 
+ *
  * 			; reset usage timers for all flasks
  * 			LifeFlasks := 0
  * 			BuffFlasks := 0
@@ -375,11 +375,11 @@ Loop {
  * 	}
  * 	return
  */
-	
+
 ~Enter::
 ;~Ctrl::
 	gosub, StopBot_noinput
-	; do nothing if its disabled/paused 
+	; do nothing if its disabled/paused
 /* 	if ((UseFlasks && default_chatkey=true) | chatPause) {
  * 		if (default_chatkey = true) {
  * 			chatPause := not chatPause
@@ -392,7 +392,7 @@ Loop {
  * 			; initialize start of auto-flask use
  * 			ToolTip, AutoFlasks, 0, 0
  * 			SetTimer, RemoveToolTip, Off
- * 
+ *
  * 			; reset usage timers for all flasks
  * 			LifeFlasks := 0
  * 			BuffFlasks := 0
@@ -428,13 +428,13 @@ Loop {
  */
 	return
 
-;;XButton1::
+XButton2::
 CapsLock::
 +z::
 	BlockInput MouseMoveOff	;disable block mouse input in case it gets stuck somehow(failsafe, not necessary at all)
 	BlockInput Off
 	tabbing := false
-	
+
 	UseFlasks := not UseFlasks
 	if UseFlasks {
 		useAllFlasks := false ;stop using all at the same time
@@ -477,7 +477,7 @@ CapsLock::
 		SetTimer, RemoveToolTip, -5000
 	}
 	return
-	
+
 ;;XButton2::
 ~<::
 	if (attacktimeout_backup == -1) {
@@ -501,7 +501,7 @@ CapsLock::
 		longTimeout := not longTimeout
 	}
 	return
-	
+
 ~+d::
 	if UseFlasks {
 		useAllFlasks := true
@@ -515,12 +515,12 @@ CapsLock::
 RemoveToolTip:
 	ToolTip
 	return
-	
+
 ^F12::
 	BlockInput MouseMoveOff	;disable block mouse input in case it gets stuck somehow(failsafe, not necessary at all)
 	BlockInput Off
 	ExitApp
-	
+
  ;~LAlt::
  ;~LWin::
  ;~ $~LShift::
@@ -528,7 +528,7 @@ RemoveToolTip:
   	;~ ;StopBot_noinput()
   	;~ gosub, StopBot_noinput
 	;~ return
- 
+
 
 ~F5::
 	;StopBot()
@@ -543,7 +543,7 @@ RemoveToolTip:
 	;StopBot()
 	gosub, StopBot
 	return
-	
+
 ;StopBot(){
 StopBot:
 		BlockInput MouseMoveOff	;disable block mouse input in case it gets stuck somehow(failsafe, not necessary at all)
@@ -603,7 +603,7 @@ StopBot_noinput:
 ; 2nd is release of button}
 ;----------------------------------------------------------------------
 ~XButton1::
-~XButton2::
+;;~XButton2::
 ~w::
 ~e::
 ~RButton::
@@ -645,13 +645,13 @@ StopBot_noinput:
 	; pass-thru and release the right mouse button
 	HoldLeftClick := false
 	return
-	
+
 ;~ XButton2:: ;mouse 5
 ;~ XButton1:: ;mouse4
 	;~ if (UseFlasks or useAllFlasks) {
 		;~ Send t
 	;~ }
-	
+
  ;~ ~Shift::
 ;~ ; trigger 2 spells with middle mouse button
 	;~ if (UseFlasks && (ShiftTrigger1 <> 0)) {
@@ -661,7 +661,7 @@ StopBot_noinput:
   		;~ }
   	;~ }
   	;~ return
-  	
+
  ;~ ~WheelUp::
 	;~ ; trigger 2 spells with middle mouse button
 	;~ if (UseFlasks && (WUButtonTrigger1 <> 0)) {
@@ -674,7 +674,7 @@ StopBot_noinput:
 		;~ Send w
 	;~ }
  	;~ return
- 	
+
  ;~ ~WheelDown::
  	;~ ; trigger 2 spells with middle mouse button
  	;~ if (UseFlasks && (WDButtonTrigger1 <> 0)) {
@@ -695,7 +695,7 @@ StopBot_noinput:
 		;~ Sleep, %VariableDelay%
 	;~ }
  	;~ return
- 
+
 ;~ ~WheelDown::
 	;~ if (UseFlasks) {
 		;~ SetTimer, HoldClick, -1 ;-1 to run once
@@ -722,7 +722,7 @@ Return
 ;~ ; Dynamically set the hotkey to de-assign the 1st button triggered when pressing the defensives
 ;~ Hotkey, %osb%, Attack_timeout_toggle
 	;~ return
-	
+
 ;~ Attack_timeout_toggle:
 	;~ if (attacktimeout_backup == -1) {
 		;~ attacktimeout_backup := attacktimeout
@@ -738,7 +738,7 @@ Return
 		;~ }
 	;~ }
 	;~ return
-	
+
 ;~ ~W::
 	;~ if(UseFlasks && osb <> 0) {
 		;~ send %osb%
@@ -747,7 +747,7 @@ Return
 		;~ }
 	;~ }
 	;~ return
-	
+
 +f::
 	if True {
 		; disconnect hotkey
@@ -854,7 +854,7 @@ CycleAllFlasksWhenReady:
 		}
 	}
 	return
-	
+
 CycleAllSpellsWhenReady:
 	for spell, duration in SpellDuration {
 		; skip flasks with 0 duration and skip flasks that are still active
@@ -944,7 +944,7 @@ CycleMarchOfTHeLegion:
  * 			;Send ^{Click, %col%, %row%}
  * 		}
  * 	}
- * 	
+ *
  * 	if (tabs > 1) {
  * 		tabsx_rand := tabsx[tab]
  * 		tabsy_rand := tabsy
@@ -954,7 +954,7 @@ CycleMarchOfTHeLegion:
  * 		Send ^{Click, %tabsx_rand%, %tabsy_rand%}
  * 		tab := tab+1
  * 	}
- * 	
+ *
  * 	}
  * 	tabbing := false
  * 	BlockInput MouseMoveOff		;unblock mouse input
@@ -982,7 +982,7 @@ CycleMarchOfTHeLegion:
  * Gui, Add, Button, default, OK
  * Gui, Show
  * return
- * 
+ *
  * ButtonOK:
  * GuiClose:
  * GuiEscape:
@@ -1070,7 +1070,7 @@ CycleMarchOfTHeLegion:
 	MouseMove, x, y
 	}
 	Return
-	
+
 ~+q::
 	;StopBot()
 	gosub, StopBot
@@ -1128,7 +1128,7 @@ CycleMarchOfTHeLegion:
 	MouseMove, 0, 1079, 0
 	;StopBot()
 	gosub, StopBot
-	
+
 	o_PrimX := 0
 	o_PrimY := 0
 	o_AltX := 0
@@ -1169,13 +1169,13 @@ CycleMarchOfTHeLegion:
 	}
 	;Send {Click %o_PrimX%, %o_PrimY%}	;slot portal
 	MouseClick, Left, %o_PrimX%, %o_PrimY%, 1, 2
-	
+
 	Random, VariableDelay, 200, 500
 	Sleep %VariableDelay%
 	Send e	;use portal
 	Random, VariableDelay, 2300, 2500
 	Sleep %VariableDelay%
-	
+
 	;Send {Click Right, %o_PrimX%, %o_PrimY%}	;click portal gem
 	MouseClick, Right, %o_PrimX%, %o_PrimY%, 1, 2
 	Random, VariableDelay, 100, 200
@@ -1202,7 +1202,7 @@ CycleMarchOfTHeLegion:
 	BlockInput Off
 	Random, VariableDelay, 200, 300
 	Sleep %VariableDelay%
-	
+
 	Send i
 	Random, VariableDelay, 100, 200
 	Sleep %VariableDelay%
