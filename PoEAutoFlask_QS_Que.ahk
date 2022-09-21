@@ -38,29 +38,29 @@ MarchOfTheLegion :=[6,7,8,9] ;auras socketed in march of the legion boots
 ; Note: Delete the last line (["e"]), or set value to 0, if you don't use a buff skill
 ;----------------------------------------------------------------------
 ;--Life Flask list (currently spammable flasks and spells on cd)
-FlaskDurationInit[1] := 500	; karui life(2500)/Forbidden taste(4000)
-;FlaskDurationInit[2] := 4250		; 2ndkarui(2700)/life(4000)/basalt(4500)
-;FlaskDurationInit[3] := 4800		; Rumi's armor(4800)
+;FlaskDurationInit["s"] := 3500	; karui life(2500)/Forbidden taste(4000)
+;FlaskDurationInit[2] := 3500		; 2ndkarui(2700)/life(4000)/basalt(4500)
+;FlaskDurationInit[3] := 3500		; Rumi's armor(4800)
 ;FlaskDurationInit[4] := 8000		; divination(5000)/armor(4000x2 so they dont stack after 1st time)
 ;FlaskDurationInit[5] := 4900		; QS(4800)
 
 ;--Spell list
 ;SpellDurationInit["d"] := 10000		; Convocation(3000/3100)
-SpellDurationInit[8] := 2000		; PhaseRun(4000)/Molten Shell(~8700)/MS+19%(~9500)
-SpellDurationInit[9] := 1000		;steelskin/vaalMS
-;SpellDurationInit["t"] := 1000		;vaalHaste
+;SpellDurationInit[8] := 2000		; PhaseRun(4000)/Molten Shell(~8700)/MS+19%(~9500)
+;SpellDurationInit[9] := 1000		;steelskin/vaalMS
+SpellDurationInit["t"] := 1000		;vaalHaste
 
 
 ;--Buff flask list(queued one after another)
-;FlaskDurationBuffInit["s"] := 5000
-FlaskDurationBuffInit[2] := 4000 ;6500		; experimenter's granite(6400)/silver(6000)
-FlaskDurationBuffInit[3] := 4000		; divination(5000)/armor(4000)/basalt(5400)/experimenter's(6200)
-;FlaskDurationBuffInit[4] := 7300		; Rumi's armor(4800)/taste of hate(4800)
-;FlaskDurationBuffInit[5] := 4900
+FlaskDurationBuffInit["s"] := 8000
+FlaskDurationBuffInit[2] := 8000 ;6500		; experimenter's granite(6400)/silver(6000)
+FlaskDurationBuffInit[3] := 8000		; divination(5000)/armor(4000)/basalt(5400)/experimenter's(6200)
+FlaskDurationBuffInit[4] := 8000		; Rumi's armor(4800)/taste of hate(4800)
+;FlaskDurationBuffInit[5] := 8000
 
 ;--QuickSilver flask list
-FlaskDurationQSInit[4] := 7000	; QS1(4800)
-FlaskDurationQSInit[5] := 6000	; QS2(6100)/Rotgut(6000)
+;FlaskDurationQSInit[4] := 7000	; QS1(4800)
+FlaskDurationQSInit[5] := 7000	; QS2(6100)/Rotgut(6000)
 
 
 queueLife := 0				; set to 0 to spam the flasks instead
@@ -82,7 +82,7 @@ ShiftTrigger2 := 0
 gemswap_hotkey := false	;enable/disable gem swapping except the portal swap
 default_chatkey := true
 RightClickSkill := true ;use skill on right click
-2RightClickSkill := true ;use 2 skills on right click
+2RightClickSkill := false ;use 2 skills on right click
 
 useMarchOfTHeLegion := false ;cycle thru every time you click an instant spell(right click)
 MarchOfTheLegion_leftClick := false
@@ -306,7 +306,7 @@ Loop {
 				Gosub, CycleAllSpellsWhenReady
 			}
 		} else {
-			if (HoldLeftClick) {
+			if (HoldLeftClick or HoldRightClick) {
 				Gosub, CycleQSFlasksWhenReady
 				if (walkspam){
 					Gosub, CycleAllSpellsWhenReady
