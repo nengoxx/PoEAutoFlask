@@ -27,7 +27,6 @@ FlaskDurationQSInit := []
 LifeFlasks := 0
 BuffFlasks := 0
 QSFlasks := 0
-MarchOfTheLegion :=[6,7,8,9] ;auras socketed in march of the legion boots
 ;----------------------------------------------------------------------
 ; Set the duration of each flask, in ms, below.  For example, if the
 ; flask in slot 3 has a duration of "Lasts 4.80 Seconds", then use:
@@ -38,32 +37,32 @@ MarchOfTheLegion :=[6,7,8,9] ;auras socketed in march of the legion boots
 ; Note: Delete the last line (["e"]), or set value to 0, if you don't use a buff skill
 ;----------------------------------------------------------------------
 ;--Life Flask list (currently spammable flasks and spells on cd)
-FlaskDurationInit[1] := 500	; karui life(2500)/Forbidden taste(4000)
-;FlaskDurationInit[2] := 4250		; 2ndkarui(2700)/life(4000)/basalt(4500)
+;FlaskDurationInit["s"] := 5000
+;FlaskDurationInit[2] := 5000 ;6500	
 ;FlaskDurationInit[3] := 4800		; Rumi's armor(4800)
 ;FlaskDurationInit[4] := 8000		; divination(5000)/armor(4000x2 so they dont stack after 1st time)
 ;FlaskDurationInit[5] := 4900		; QS(4800)
 
 ;--Spell list
 ;SpellDurationInit["d"] := 10000		; Convocation(3000/3100)
-SpellDurationInit[8] := 2000		; PhaseRun(4000)/Molten Shell(~8700)/MS+19%(~9500)
+;SpellDurationInit[8] := 2000		; PhaseRun(4000)/Molten Shell(~8700)/MS+19%(~9500)
 SpellDurationInit[9] := 1000		;steelskin/vaalMS
 ;SpellDurationInit["t"] := 1000		;vaalHaste
 
 
 ;--Buff flask list(queued one after another)
-;FlaskDurationBuffInit["s"] := 5000
-FlaskDurationBuffInit[2] := 4000 ;6500		; experimenter's granite(6400)/silver(6000)
-FlaskDurationBuffInit[3] := 4000		; divination(5000)/armor(4000)/basalt(5400)/experimenter's(6200)
-;FlaskDurationBuffInit[4] := 7300		; Rumi's armor(4800)/taste of hate(4800)
+;FlaskDurationBuffInit["s"] := 2000
+FlaskDurationBuffInit[2] := 6000 ;6500		; experimenter's granite(6400)/silver(6000)
+FlaskDurationBuffInit[3] := 6000		; divination(5000)/armor(4000)/basalt(5400)/experimenter's(6200)
+FlaskDurationBuffInit[4] := 6000		; Rumi's armor(4800)/taste of hate(4800)
 ;FlaskDurationBuffInit[5] := 4900
 
 ;--QuickSilver flask list
-FlaskDurationQSInit[4] := 7000	; QS1(4800)
+;FlaskDurationQSInit[4] := 6000	; QS1(4800)
 FlaskDurationQSInit[5] := 6000	; QS2(6100)/Rotgut(6000)
 
 
-queueLife := 0				; set to 0 to spam the flasks instead
+queueLife := 1				; set to 0 to spam the flasks instead
 queueBuff := 0				; set to 0 to spam the flasks instead
 timeBeforeHeal := 0			; time before using a life flask when pressing the attack button, set unless you got 0 ES(default=0)
 attacktimeout := 2000		; time between attacks(default=500)
@@ -395,9 +394,6 @@ StopBot_noinput:
 			Sleep, %VariableDelay%
 			Send 9
 		}
-	}
-	if(not MarchOfTheLegion_leftClick){
-		Gosub, CycleMarchOfTHeLegion
 	}
 	; pass-thru and capture when the last attack (Right click) was done
 	; we also track if the mouse button is being held down for continuous attack(s) and/or channelling skills
