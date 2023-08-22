@@ -38,7 +38,7 @@
 	;----------------------------------------------------------------------
 	;--Life Flask list (currently spammable flasks and spells on cd)
 	;FlaskDurationInit["s"] := 3000
-	;FlaskDurationInit[1] := 3000 ;6500
+	FlaskDurationInit[1] := 3000 ;6500
 	;FlaskDurationInit[3] := 4800		; Rumi's armor(4800)
 	;FlaskDurationInit[4] := 8000		; divination(5000)/armor(4000x2 so they dont stack after 1st time)
 	;FlaskDurationInit[5] := 4900		; QS(4800)
@@ -52,9 +52,9 @@
 	;--Buff flask list(queued one after another)
 	FlaskDurationBuffInit["s"] := 4000
 	;FlaskDurationBuffInit[1] := 2100 ;6500		; experimenter's granite(6400)/silver(6000)
-	;FlaskDurationBuffInit[2] := 6000		; divination(5000)/armor(4000)/basalt(5400)/experimenter's(6200)
-	;FlaskDurationBuffInit[3] := 6000		; Rumi's armor(4800)/taste of hate(4800)
-	;FlaskDurationBuffInit[5] := 4900
+	FlaskDurationBuffInit[2] := 6000		; divination(5000)/armor(4000)/basalt(5400)/experimenter's(6200)
+	FlaskDurationBuffInit[3] := 6000		; Rumi's armor(4800)/taste of hate(4800)
+	FlaskDurationBuffInit[5] := 4900
 
 	;--QuickSilver flask list
 	;FlaskDurationQSInit[4] := 6000	; QS1(4800)
