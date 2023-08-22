@@ -38,27 +38,27 @@
 	;----------------------------------------------------------------------
 	;--Life Flask list (currently spammable flasks and spells on cd)
 	;FlaskDurationInit["s"] := 3000
-	FlaskDurationInit[1] := 3000 ;6500
+	;FlaskDurationInit[1] := 3000 ;6500
 	;FlaskDurationInit[3] := 4800		; Rumi's armor(4800)
 	;FlaskDurationInit[4] := 8000		; divination(5000)/armor(4000x2 so they dont stack after 1st time)
-	;FlaskDurationInit[5] := 4900		; QS(4800)
+	;FlaskDurationInit[4] := 4900		; QS(4800)
 
 	;--Spell list
 	;SpellDurationInit["d"] := 10000		; Convocation(3000/3100)
-	SpellDurationInit["r"] := 1000		; PhaseRun(4000)/Molten Shell(~8700)/MS+19%(~9500)
+	;SpellDurationInit["r"] := 1000		; PhaseRun(4000)/Molten Shell(~8700)/MS+19%(~9500)
 	;SpellDurationInit["q"] := 1000		;steelskin/vaalMS
-	;SpellDurationInit["t"] := 1000		;vaalHaste
+	SpellDurationInit["t"] := 1000		;vaalHaste
 
 	;--Buff flask list(queued one after another)
-	FlaskDurationBuffInit["s"] := 4000
-	;FlaskDurationBuffInit[1] := 2100 ;6500		; experimenter's granite(6400)/silver(6000)
+	;FlaskDurationBuffInit["s"] := 4000
+	FlaskDurationBuffInit[1] := 6000 ;6500		; experimenter's granite(6400)/silver(6000)
 	FlaskDurationBuffInit[2] := 6000		; divination(5000)/armor(4000)/basalt(5400)/experimenter's(6200)
 	FlaskDurationBuffInit[3] := 6000		; Rumi's armor(4800)/taste of hate(4800)
-	FlaskDurationBuffInit[5] := 4900
+	;FlaskDurationBuffInit[4] := 6000
 
 	;--QuickSilver flask list
-	;FlaskDurationQSInit[4] := 6000	; QS1(4800)
-	;FlaskDurationQSInit[4] := 6000	; QS2(6100)/Rotgut(6000)
+	;FlaskDurationQSInit[3] := 6000	; QS1(4800)
+	FlaskDurationQSInit[4] := 6000	; QS2(6100)/Rotgut(6000)
 
 	queueLife := 1				; set to 0 to spam the flasks instead
 	queueBuff := 0				; set to 0 to spam the flasks instead
