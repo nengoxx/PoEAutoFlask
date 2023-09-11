@@ -37,7 +37,7 @@
 	; Note: Delete the last line (["e"]), or set value to 0, if you don't use a buff skill
 	;----------------------------------------------------------------------
 	;--Life Flask list (currently spammable flasks and spells on cd)
-	;FlaskDurationInit["s"] := 3000
+	FlaskDurationInit["s"] := 3000
 	;FlaskDurationInit[1] := 3000 ;6500
 	;FlaskDurationInit[3] := 4800		; Rumi's armor(4800)
 	;FlaskDurationInit[4] := 8000		; divination(5000)/armor(4000x2 so they dont stack after 1st time)
