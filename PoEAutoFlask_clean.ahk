@@ -45,9 +45,9 @@
 
 	;--Spell list
 	;SpellDurationInit["d"] := 10000		; Convocation(3000/3100)
-	SpellDurationInit["r"] := 1000		; PhaseRun(4000)/Molten Shell(~8700)/MS+19%(~9500)
+	;SpellDurationInit["r"] := 1000		; PhaseRun(4000)/Molten Shell(~8700)/MS+19%(~9500)
 	;SpellDurationInit["q"] := 1000		;steelskin/vaalMS
-	SpellDurationInit["t"] := 1000		;vaalHaste
+	;SpellDurationInit["t"] := 1000		;vaalHaste
 
 	;--Buff flask list(queued one after another)
 	;FlaskDurationBuffInit["s"] := 4000
