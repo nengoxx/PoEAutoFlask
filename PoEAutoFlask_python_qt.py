@@ -9,7 +9,7 @@ import time
 import sys
 import queue
 
-from PySide6.QtWidgets import QApplication, QLabel, QWidget, QVBoxLayout
+from PySide6.QtWidgets import QApplication, QLabel, QWidget, QVBoxLayout, QHBoxLayout
 from PySide6.QtGui import QPixmap, QGuiApplication
 from PySide6.QtCore import Qt, QTimer
 
@@ -70,8 +70,10 @@ event_queue = queue.Queue()
 # Constants
 WINDOW_NAME = "Path of Exile 2"
 ICON_PATH = './img/icon.png'
+icon_size=50
 CAST_WALK_PATH = './img/castWalk.png'
 CAST_ROLL_PATH = './img/castRoll.png'
+extra_icon_size=25
 
 # Bot states
 botting = False
@@ -89,19 +91,23 @@ class Overlay(QWidget):
         self.setAttribute(Qt.WA_TransparentForMouseEvents)  # Make the window click-through
 
         # Set up the layout
-        self.layout = QVBoxLayout()
+        #self.layout = QVBoxLayout()  # Vertical layout
+        # or
+        self.layout = QHBoxLayout()  # Horizontal layout
         self.layout.setContentsMargins(0, 0, 0, 0)
+        #self.layout.setSpacing(10)  # Change spacing between widgets
+        self.layout.setAlignment(Qt.AlignCenter)  # Center the layout
         self.setLayout(self.layout)
 
         # Create and initialize widgets
         self.icon_label = QLabel()
-        self.icon_label.setPixmap(QPixmap(ICON_PATH).scaled(50, 50, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        self.icon_label.setPixmap(QPixmap(ICON_PATH).scaled(icon_size, icon_size, Qt.KeepAspectRatio, Qt.SmoothTransformation))
 
         self.cast_walk_label = QLabel()
-        self.cast_walk_label.setPixmap(QPixmap(CAST_WALK_PATH).scaled(50, 50, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        self.cast_walk_label.setPixmap(QPixmap(CAST_WALK_PATH).scaled(extra_icon_size, extra_icon_size, Qt.KeepAspectRatio, Qt.SmoothTransformation))
 
         self.cast_roll_label = QLabel()
-        self.cast_roll_label.setPixmap(QPixmap(CAST_ROLL_PATH).scaled(50, 50, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        self.cast_roll_label.setPixmap(QPixmap(CAST_ROLL_PATH).scaled(extra_icon_size, extra_icon_size, Qt.KeepAspectRatio, Qt.SmoothTransformation))
 
         # Add widgets to the layout
         self.layout.addWidget(self.icon_label)
@@ -115,6 +121,14 @@ class Overlay(QWidget):
 
         # Apply Windows-specific transparency and click-through styles
         self._apply_windows_clickthrough()
+
+        # Set the overlay position to the top middle of the screen
+        screen_geometry = QGuiApplication.primaryScreen().availableGeometry()
+        overlay_width = self.layout.sizeHint().width()
+        overlay_height = self.layout.sizeHint().height()
+        x_position = (screen_geometry.width() - overlay_width) // 2
+        y_position = 0  # Top of the screen
+        self.setGeometry(x_position, y_position, overlay_width, overlay_height)
 
     def _apply_windows_clickthrough(self):
         hwnd = self.winId().__int__()  # Get the window handle
@@ -282,7 +296,7 @@ if __name__ == "__main__":
 
     # Initialize the overlay
     overlay = Overlay()
-    overlay.setGeometry(10, 10, 200, 100)
+    #overlay.setGeometry(10, 10, 200, 100) #load from file?
     overlay.update_overlay(botting, walkCast, rollCast)
 
     # Start a timer for the UI updates
