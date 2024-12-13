@@ -3,3 +3,5 @@
 cports.exe
 *.cfg
 *.chm
+venv
+.venv
