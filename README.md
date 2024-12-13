@@ -1,4 +1,4 @@
-# PoEAutoFlask 
+# PoEAutoFlask v2
 Automates flasks & skills for 1 button playstyle.
 
 - Uses button 1(bound to command minion) on right click.
@@ -10,11 +10,15 @@ ToDO:
 - Auto life flask.
 - 1-button burst, rotation, weapon swap?
 - Shield charge + roll on long left click hold(5-10 sec)?
-- DC keybind/auto dc with cports?
+- Suggestions are welcome.
 
 
 
-# PoEAutoFlask(old PoE1 version)  
+# Deprecated(old PoE1 version) 
+
+This was originally a fork of a script written in autohotkey that I've been using over the years to save my wrists, with the new PoE 2 release I will be updating everything, using python and Qt6 for the overlay.
+
+# PoEAutoFlask
 Automates the use of flasks for Path of Exile using an AutoHotKey script.
 
 Credit to the author of the source script: https://github.com/JoelStanford/PoEAutoFlask
