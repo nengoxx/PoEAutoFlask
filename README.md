@@ -1,4 +1,18 @@
-# PoEAutoFlask  
+# PoEAutoFlask(not yet with flasks) 
+Automates flasks & skills for 1 button playstyle.
+
+- Uses button 1(bound to command minion) on right click.
+- Hold left click for 2 seconds to spam button 1 and keep your minions with you.
+- Auto spacebar(bound to roll) after right click.
+
+ToDO:
+- Auto flasks.
+- 1-button burst, rotation, weapon swap?
+- Shield charge + roll on long left click hold(5-10 sec)?
+
+
+
+# PoEAutoFlask(old PoE1 version)  
 Automates the use of flasks for Path of Exile using an AutoHotKey script.
 
 Credit to the author of the source script: https://github.com/JoelStanford/PoEAutoFlask

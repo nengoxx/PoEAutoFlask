@@ -32,10 +32,27 @@ windowName = "Path of Exile 2"
 #Extra functionality for left click holding
 walkCast=False
 press_time = 0
-hold_threshold = 3  # seconds
+hold_threshold = 2  # seconds
 
 #Cast after roll
 rollCast=False
+
+#Auto flasks
+autoManaFlask=False
+
+# Coordinates of the pixel to monitor
+pixel_x = 938  # Replace with the actual x-coordinate
+pixel_y = 368  # Replace with the actual y-coordinate
+# Bright red color (R, G, B)
+blue_mana = [(28, 74, 177),(25, 67, 146),(24, 63, 145),(19, 51, 117)]
+blue_mana_range = {
+    'red': (17, 31),
+    'green': (49, 78),
+    'blue': (115, 182)
+}
+red_life = (255, 0, 0)
+press_interval_manaf = 4 # Time interval to wait before pressing the key again (in seconds)
+last_press_time_manaf = 0 # Variable to keep track of the last time the key was pressed
 
 #Key list for auto rotation
 keyList=['shift+e','shift+r','shift+2','shift+q']
@@ -43,10 +60,13 @@ keyList=['shift+e','shift+r','shift+2','shift+q']
 #Key list for skills
 commandMinions_s="1"
 roll_s="space"
+life_flask_s="2"
+mana_flask_s="3"
 
 #Toggle buttons
-walkCast_btn='ñ'
-rollCast_btn='0'
+walkCast_btn='0'
+rollCast_btn='9'
+manaFlask_btn='8'
 
 ##### Overlay
 
@@ -73,6 +93,7 @@ ICON_PATH = './img/icon.png'
 icon_size=50
 CAST_WALK_PATH = './img/castWalk.png'
 CAST_ROLL_PATH = './img/castRoll.png'
+MANA_FLASK_PATH = './img/manaFlask.png'
 extra_icon_size=25
 
 # Bot states
@@ -109,15 +130,20 @@ class Overlay(QWidget):
         self.cast_roll_label = QLabel()
         self.cast_roll_label.setPixmap(QPixmap(CAST_ROLL_PATH).scaled(extra_icon_size, extra_icon_size, Qt.KeepAspectRatio, Qt.SmoothTransformation))
 
+        self.flask_mana_label = QLabel()
+        self.flask_mana_label.setPixmap(QPixmap(MANA_FLASK_PATH).scaled(extra_icon_size, extra_icon_size, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+
         # Add widgets to the layout
         self.layout.addWidget(self.icon_label)
         self.layout.addWidget(self.cast_walk_label)
         self.layout.addWidget(self.cast_roll_label)
+        self.layout.addWidget(self.flask_mana_label)
 
         # Hide all widgets initially
         self.icon_label.hide()
         self.cast_walk_label.hide()
         self.cast_roll_label.hide()
+        self.flask_mana_label.hide()
 
         # Apply Windows-specific transparency and click-through styles
         self._apply_windows_clickthrough()
@@ -137,12 +163,13 @@ class Overlay(QWidget):
         styles |= 0x20  # WS_EX_TRANSPARENT
         ctypes.windll.user32.SetWindowLongW(hwnd, ctypes.c_int(-20), styles)
 
-    def update_overlay(self, botting, walkCast, rollCast):
+    def update_overlay(self, botting, walkCast, rollCast, autoManaFlask):
         # Update visibility based on the state
         if botting:
             self.icon_label.show()
             self.cast_walk_label.setVisible(walkCast)
             self.cast_roll_label.setVisible(rollCast)
+            self.flask_mana_label.setVisible(autoManaFlask)
             self.adjustSize()
             self.show()
         else:
@@ -152,19 +179,19 @@ class Overlay(QWidget):
 
 # Function to update the UI
 def update_ui():
-    global botting, walkCast, rollCast
+    global botting, walkCast, rollCast, autoManaFlask
     try:
         while not event_queue.empty():
             action = event_queue.get_nowait()
             if action == "update":
-                overlay.update_overlay(botting, walkCast, rollCast)
+                overlay.update_overlay(botting, walkCast, rollCast, autoManaFlask)
     except queue.Empty:
         pass
 
     # Ensure the overlay reappears when returning to the game
     is_game_active = get_active_window()
     if is_game_active:
-        overlay.update_overlay(botting, walkCast, rollCast)
+        overlay.update_overlay(botting, walkCast, rollCast, autoManaFlask)
     else:
         overlay.hide()
 
@@ -210,6 +237,12 @@ def toggleRollCast(kb_event_info):
     rollCast = not rollCast
     event_queue.put("update")  # Notify the UI to update
 
+#Mana flask
+def toggleAutoManaFlask(kb_event_info):
+    global autoManaFlask
+    autoManaFlask = not autoManaFlask
+    event_queue.put("update")  # Notify the UI to update
+
 #Mouse click actions/bindings
 def on_click(x, y, button, pressed):
     global rightClicked,leftClicked,middleClicked,walkCast,press_time,hold_threshold
@@ -249,6 +282,86 @@ def check_hold_duration():
             return  # Exit the loop once the hold action is triggered
         time.sleep(0.01)  # Check every 10ms to avoid high CPU usage
 
+def is_color_in_range(pixel_color, color_range):
+    red, green, blue = pixel_color
+    return (color_range['red'][0] <= red <= color_range['red'][1] and
+            color_range['green'][0] <= green <= color_range['green'][1] and
+            color_range['blue'][0] <= blue <= color_range['blue'][1])
+
+def monitor_pixel_color():
+    global last_press_time_manaf
+    while True:
+        if not botting or not get_active_window() or not autoManaFlask:
+            time.sleep(1)
+            continue
+        # Get the color of the pixel
+        pixel_color = pyautogui.pixel(pixel_x, pixel_y)
+
+        # Check if the color has changed from bright red
+        #if pixel_color != blue_mana:
+        #if pixel_color not in blue_mana:
+        if not is_color_in_range(pixel_color, blue_mana_range):
+            current_time = time.time()
+            # Check if the press interval has passed
+            if current_time - last_press_time_manaf >= press_interval_manaf:
+                keyboard.send(mana_flask_s)
+                # keyboard.press(mana_flask_s)
+                # sleep(randint(10, 50)/1000)
+                # keyboard.release(mana_flask_s)
+                last_press_time_manaf = current_time
+
+        # Sleep for a short duration to avoid high CPU usage
+        time.sleep(0.1)
+
+""" def monitor_pixel_color_log():
+    global last_press_time_manaf
+    while True:
+        if not botting or not get_active_window() or not autoManaFlask:
+            time.sleep(1)
+            continue
+        # Get the color of the pixel
+        pixel_color = pyautogui.pixel(pixel_x, pixel_y)
+
+        # Check if the color has changed from bright red
+        if not is_color_in_range(pixel_color, blue_mana_range):
+            current_time = time.time()
+            time_since_last_press = current_time - last_press_time_manaf
+            print(f"Current Time: {current_time}, Last Press Time: {last_press_time_manaf}, Time Since Last Press: {time_since_last_press}, Press Interval: {press_interval_manaf}")
+            if time_since_last_press >= press_interval_manaf:
+                print("Pressing mana flask")
+                keyboard.send(mana_flask_s)
+                last_press_time_manaf = current_time
+            else:
+                print("Not pressing yet, time remaining:", press_interval_manaf - time_since_last_press)
+        else:
+            print("Pixel color is within range, no action needed.")
+
+        # Sleep for a short duration to avoid high CPU usage
+        time.sleep(0.1)
+
+def monitor_pixel_color_threaded():
+    global last_press_time_manaf
+    while True:
+        if not botting or not get_active_window() or not autoManaFlask:
+            time.sleep(1)
+            continue
+        # Get the color of the pixel
+        pixel_color = pyautogui.pixel(pixel_x, pixel_y)
+
+        # Check if the color has changed from bright red
+        if not is_color_in_range(pixel_color, blue_mana_range):
+            if threading.active_count() > 1:
+                threading.active_count() - 1
+            threading.Timer(press_interval_manaf - 0.1, press_mana_flask).start()
+
+def press_mana_flask():
+    global last_press_time_manaf
+    keyboard.send(mana_flask_s)
+    # keyboard.press(mana_flask_s)
+    # sleep(randint(10, 50)/1000)
+    # keyboard.release(mana_flask_s)
+    last_press_time_manaf = time.time() """
+
 def main():
     global botting
     if __name__== "__main__" :
@@ -258,6 +371,7 @@ def main():
         listener.start()
         keyboard.on_press_key(walkCast_btn,toggleWalkCast)
         keyboard.on_press_key(rollCast_btn,toggleRollCast)
+        keyboard.on_press_key(manaFlask_btn,toggleAutoManaFlask)
         # keyboard.on_press_key('w',toggleSkillOn)
         # keyboard.on_release_key('w',toggleSkillOff)
 
@@ -297,7 +411,7 @@ if __name__ == "__main__":
     # Initialize the overlay
     overlay = Overlay()
     #overlay.setGeometry(10, 10, 200, 100) #load from file?
-    overlay.update_overlay(botting, walkCast, rollCast)
+    overlay.update_overlay(botting, walkCast, rollCast, autoManaFlask)
 
     # Start a timer for the UI updates
     timer = QTimer()
@@ -305,9 +419,12 @@ if __name__ == "__main__":
     timer.start(100)
 
     # Run the main logic in a separate thread
-    import threading
     bot_thread = threading.Thread(target=main, daemon=True)
     bot_thread.start()
+
+    # Start the monitoring function in a separate thread
+    monitor_thread = threading.Thread(target=monitor_pixel_color, daemon=True)
+    monitor_thread.start()
 
     # Start the app
     sys.exit(app.exec())
