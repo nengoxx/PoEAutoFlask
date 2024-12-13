@@ -1,6 +1,6 @@
 @echo off
 
-set VENV_FOLDER=venv
+set VENV_FOLDER=.venv
 set PYTHON_VERSION=3.11
 
 if not exist %VENV_FOLDER% (

@@ -4,14 +4,14 @@ from time import sleep
 import pyautogui
 import keyboard
 from pynput import mouse
-import tkinter as tk
 from win32gui import GetWindowText, GetForegroundWindow
 import time
-
-import win32con
-from PIL import Image, ImageTk
-import ctypes
+import sys
 import queue
+
+from PySide6.QtWidgets import QApplication, QLabel, QWidget, QVBoxLayout
+from PySide6.QtGui import QPixmap, QGuiApplication
+from PySide6.QtCore import Qt, QTimer
 
 # Create a queue for thread-safe communication
 event_queue = queue.Queue()
@@ -50,62 +50,111 @@ rollCast_btn='0'
 
 ##### Overlay
 
-# Initialize the overlay window as hidden
-root = tk.Tk()
-root.withdraw()  # Start with the window hidden
-root.overrideredirect(True)
-root.geometry("+10+10")  # Position the window
-root.lift()
-root.wm_attributes("-topmost", True)
-root.wm_attributes("-disabled", True)
-root.wm_attributes("-transparentcolor", "white")
-root.attributes("-alpha", 0.0)  # Set transparency
-
-# Make the window click-through
-hwnd = ctypes.windll.user32.GetForegroundWindow()
-styles = ctypes.windll.user32.GetWindowLongW(hwnd, win32con.GWL_EXSTYLE)
-styles = styles | win32con.WS_EX_LAYERED | win32con.WS_EX_TRANSPARENT
-ctypes.windll.user32.SetWindowLongW(hwnd, win32con.GWL_EXSTYLE, styles)
-ctypes.windll.user32.SetLayeredWindowAttributes(hwnd, 0, 255, win32con.LWA_ALPHA)
-
 # Load the icons
-icon_path = '.\img\icon.png'
-castWalk_path = '.\img\castWalk.png'
-castRoll_path = '.\img\castRoll.png'
+icon_path = './img/icon.png'
+castWalk_path = './img/castWalk.png'
+castRoll_path = './img/castRoll.png'
 
-icon = Image.open(icon_path).convert("RGBA")
-icon = icon.resize((50, 50))  # Resize the icon if needed
-icon = ImageTk.PhotoImage(icon)
+from PySide6.QtWidgets import QApplication, QLabel, QWidget, QVBoxLayout
+from PySide6.QtGui import QPixmap, QGuiApplication
+from PySide6.QtCore import Qt, QTimer
+import ctypes
+import sys
+import time
+from win32gui import GetWindowText, GetForegroundWindow
+import queue
 
-castWalk_icon = Image.open(castWalk_path).convert("RGBA")
-castWalk_icon = castWalk_icon.resize((50, 50))  # Resize the icon if needed
-castWalk_icon = ImageTk.PhotoImage(castWalk_icon)
+# Create a queue for thread-safe communication
+event_queue = queue.Queue()
 
-castRoll_icon = Image.open(castRoll_path).convert("RGBA")
-castRoll_icon = castRoll_icon.resize((50, 50))  # Resize the icon if needed
-castRoll_icon = ImageTk.PhotoImage(castRoll_icon)
+# Constants
+WINDOW_NAME = "Path of Exile 2"
+ICON_PATH = './img/icon.png'
+CAST_WALK_PATH = './img/castWalk.png'
+CAST_ROLL_PATH = './img/castRoll.png'
+
+# Bot states
+botting = False
+walkCast = False
+rollCast = False
+
+class Overlay(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowFlags(
+            Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool | Qt.BypassWindowManagerHint
+        )
+        self.setAttribute(Qt.WA_TranslucentBackground)
+        self.setAttribute(Qt.WA_NoSystemBackground)
+        self.setAttribute(Qt.WA_TransparentForMouseEvents)  # Make the window click-through
+
+        # Set up the layout
+        self.layout = QVBoxLayout()
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(self.layout)
+
+        # Create and initialize widgets
+        self.icon_label = QLabel()
+        self.icon_label.setPixmap(QPixmap(ICON_PATH).scaled(50, 50, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+
+        self.cast_walk_label = QLabel()
+        self.cast_walk_label.setPixmap(QPixmap(CAST_WALK_PATH).scaled(50, 50, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+
+        self.cast_roll_label = QLabel()
+        self.cast_roll_label.setPixmap(QPixmap(CAST_ROLL_PATH).scaled(50, 50, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+
+        # Add widgets to the layout
+        self.layout.addWidget(self.icon_label)
+        self.layout.addWidget(self.cast_walk_label)
+        self.layout.addWidget(self.cast_roll_label)
+
+        # Hide all widgets initially
+        self.icon_label.hide()
+        self.cast_walk_label.hide()
+        self.cast_roll_label.hide()
+
+        # Apply Windows-specific transparency and click-through styles
+        self._apply_windows_clickthrough()
+
+    def _apply_windows_clickthrough(self):
+        hwnd = self.winId().__int__()  # Get the window handle
+        styles = ctypes.windll.user32.GetWindowLongW(hwnd, ctypes.c_int(-20))
+        styles |= 0x80000  # WS_EX_LAYERED
+        styles |= 0x20  # WS_EX_TRANSPARENT
+        ctypes.windll.user32.SetWindowLongW(hwnd, ctypes.c_int(-20), styles)
+
+    def update_overlay(self, botting, walkCast, rollCast):
+        # Update visibility based on the state
+        if botting:
+            self.icon_label.show()
+            self.cast_walk_label.setVisible(walkCast)
+            self.cast_roll_label.setVisible(rollCast)
+            self.adjustSize()
+            self.show()
+        else:
+            self.hide()
 
 #####
 
-# Function to update the overlay
+# Function to update the UI
 def update_ui():
+    global botting, walkCast, rollCast
     try:
-        # Process all pending messages in the queue
         while not event_queue.empty():
             action = event_queue.get_nowait()
             if action == "update":
-                showText()
+                overlay.update_overlay(botting, walkCast, rollCast)
     except queue.Empty:
         pass
-    finally:
-        root.update_idletasks()  # Ensure updates are handled here
-        root.update()  # Refresh the UI
-        # Schedule the next update
-        root.after(100, update_ui)
+
+    # Ensure the overlay reappears when returning to the game
+    is_game_active = get_active_window()
+    if is_game_active:
+        overlay.update_overlay(botting, walkCast, rollCast)
+    else:
+        overlay.hide()
 
 def get_active_window():
-    root.update_idletasks()
-    root.update()
     return (GetWindowText(GetForegroundWindow()) == windowName)
 
 #Toggle bot on/off
@@ -119,31 +168,6 @@ def stopBot(kb_event_info):
     global botting
     botting = False
     event_queue.put("update")  # Notify the UI to update
-
-
-
-# Display the icons to show the bot status
-def showText():
-    global botting, walkCast, rollCast
-    # Clear all existing widgets
-    for widget in root.winfo_children():
-        widget.destroy()
-
-    # Check if botting is active and the correct window is in focus
-    if botting and get_active_window():
-        # Create the main bot status icon
-        tk.Label(root, image=icon, bg='white').grid(row=0, column=0)
-        # Add additional indicators if walkCast or rollCast are enabled
-        if walkCast:
-            tk.Label(root, image=castWalk_icon, bg='white').grid(row=0, column=1)
-        if rollCast:
-            tk.Label(root, image=castRoll_icon, bg='white').grid(row=0, column=2)
-
-        root.deiconify()  # Show the window
-        root.update_idletasks()  # Refresh the display
-    else:
-        root.withdraw()  # Hide the window
-
 
 
 def toggleSkillOn(kb_event_info):
@@ -232,7 +256,7 @@ def main():
                     time.sleep(0.05)
             else:
                 # Hide the overlay if the game is not active
-                root.withdraw()
+                overlay.hide()
                 time.sleep(0.1)
 
     
@@ -254,6 +278,22 @@ def commandMinions():
 #####
 
 if __name__ == "__main__":
-    # Initialize the UI
-    root.after(100, update_ui)
-    main()
+    app = QApplication(sys.argv)
+
+    # Initialize the overlay
+    overlay = Overlay()
+    overlay.setGeometry(10, 10, 200, 100)
+    overlay.update_overlay(botting, walkCast, rollCast)
+
+    # Start a timer for the UI updates
+    timer = QTimer()
+    timer.timeout.connect(update_ui)
+    timer.start(100)
+
+    # Run the main logic in a separate thread
+    import threading
+    bot_thread = threading.Thread(target=main, daemon=True)
+    bot_thread.start()
+
+    # Start the app
+    sys.exit(app.exec())

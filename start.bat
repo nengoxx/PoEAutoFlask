@@ -1,6 +1,6 @@
 @echo off
 
-call .\venv\Scripts\activate.bat
+call .\.venv\Scripts\activate.bat
 
 
 python PoeAutoFlask_python.py
