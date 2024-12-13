@@ -46,11 +46,16 @@ pixel_y = 368  # Replace with the actual y-coordinate
 # Bright red color (R, G, B)
 blue_mana = [(28, 74, 177),(25, 67, 146),(24, 63, 145),(19, 51, 117)]
 blue_mana_range = {
-    'red': (17, 31),
-    'green': (49, 78),
-    'blue': (115, 182)
+    'red': (16, 32),
+    'green': (45, 80),
+    'blue': (115, 185)
 }
-red_life = (255, 0, 0)
+green_life = (255, 0, 0)
+green_life_range = {
+    'red': (29, 31),
+    'green': (143, 145),
+    'blue': (44, 45)
+}
 press_interval_manaf = 4 # Time interval to wait before pressing the key again (in seconds)
 last_press_time_manaf = 0 # Variable to keep track of the last time the key was pressed
 
