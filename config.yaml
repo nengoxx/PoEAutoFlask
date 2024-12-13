@@ -1,0 +1,10 @@
+KeybindsForSkills:
+  commandMinions: "1"
+  roll: "space"
+  lifeFlask: "2"
+  manaFlask: "3"
+
+KeybindsForToggles:
+  walkAndCommand: "0"
+  castAndRoll: "9"
+  manaFlask: "8"
