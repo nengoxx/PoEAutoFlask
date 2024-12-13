@@ -3,7 +3,7 @@
 call .\.venv\Scripts\activate.bat
 
 
-python PoeAutoFlask_python.py
+python PoeAutoFlask.py
 
 :: Keep terminal open
 cmd /k

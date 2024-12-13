@@ -1,6 +1,0 @@
-pyautogui
-keyboard
-pynput
-pywin32
-
-pyside6

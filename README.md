@@ -10,6 +10,7 @@ ToDO:
 - Auto life flask.
 - 1-button burst, rotation, weapon swap?
 - Shield charge + roll on long left click hold(5-10 sec)?
+- DC keybind/auto dc with cports?
 
 
 
