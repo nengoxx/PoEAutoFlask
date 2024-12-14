@@ -8,3 +8,6 @@ KeybindsForToggles:
   walkAndCommand: "0"
   castAndRoll: "9"
   manaFlask: "8"
+  toggleBotKey:"º"
+
+hideoutKey:"f5"

@@ -8,6 +8,8 @@ Has different toggles for its functionality:
 - Key 0: Hold left click for 2 seconds to spam button 1 and keep your minions with you as you pass thru enemies.
 - Key 9: Auto spacebar(bound to roll) after right click. TODO: better timing.
 - Key 8: Auto mana flask at around 30% (approx, still testing).
+- Hideout shortcut on F5.
+- Auto stop when clicking enter to type.
 
 Next steps:
 
@@ -25,3 +27,6 @@ The script install.bat will create a virtual environment and install the require
 ## Usage
 
 Use start.bat and the program will work as long as the game window is focused.
+
+- "º" to start/stop the bot completely.
+- "f5" to hideout.

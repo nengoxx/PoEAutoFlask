@@ -73,6 +73,10 @@ walkCast_btn='0'
 rollCast_btn='9'
 manaFlask_btn='8'
 
+#Shortcuts
+toggleBotKey="º"
+hideoutKey="f5"
+
 ##### Overlay
 
 # Load the icons
@@ -367,11 +371,19 @@ def press_mana_flask():
     # keyboard.release(mana_flask_s)
     last_press_time_manaf = time.time() """
 
+def hideoutTeleport(kb_event_info):
+    if get_active_window():
+        stopBot(None)
+        keyboard.send("enter")
+        keyboard.write("/hideout")
+        keyboard.send("enter")
+
 def main():
     global botting
     if __name__== "__main__" :
-        keyboard.on_press_key('º',switchBot)
-        keyboard.on_press_key('enter',stopBot)
+        keyboard.on_press_key(toggleBotKey,switchBot)
+        keyboard.on_press_key('enter',stopBot) #Stops the bot when you type.
+        keyboard.on_press_key(hideoutKey,hideoutTeleport)
         listener = mouse.Listener(on_click=on_click)
         listener.start()
         keyboard.on_press_key(walkCast_btn,toggleWalkCast)
